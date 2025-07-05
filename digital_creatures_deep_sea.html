@@ -1,0 +1,2015 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数字生物深海模拟</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden; /* 防止滚动条出现 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* 确保画布占据整个视口高度 */
+            background-color: #000; /* 初始背景，防止加载时闪烁 */
+            font-family: 'Inter', sans-serif; /* 使用 Inter 字体 */
+            position: relative;
+        }
+        canvas {
+            display: block; /* 移除画布下方的额外空间 */
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+        @media (max-width: 900px) {
+            .control-panel, .history-panel {
+                position: static !important;
+                width: 100vw !important;
+                min-width: 0 !important;
+                max-width: 100vw !important;
+                height: auto !important;
+                padding: 12px !important;
+                font-size: 13px !important;
+                border-radius: 12px !important;
+                left: 0 !important;
+                right: 0 !important;
+                top: 0 !important;
+                transform: none !important;
+                backdrop-filter: blur(8px) !important;
+                min-height: 0 !important;
+                max-height: none !important;
+            }
+            .media-controls {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .modal-content {
+                max-width: 98vw;
+                padding: 10px;
+            }
+            .recording-indicator {
+                top: 12px;
+                font-size: 13px;
+                padding: 8px 12px;
+            }
+            .spacebar-hint {
+                bottom: 60px !important;
+                font-size: 12px !important;
+                padding: 5px 10px !important;
+            }
+        }
+        
+        /* 监控器界面样式 */
+        .monitor-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .time-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 20px;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #ffffff;
+            pointer-events: none;
+        }
+        
+        .recording-controls {
+            position: absolute;
+            bottom: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 25px;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            text-align: center;
+            pointer-events: auto;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .recording-controls:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .recording-controls.recording {
+            color: #ffffff;
+            animation: pulse 1s infinite;
+        }
+        
+        .recording-controls.recording:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .recording-time {
+            font-size: 14px;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+        
+        .control-panel,
+        .history-panel {
+            height: 100vh;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .history-panel {
+            scrollbar-width: thin;
+            scrollbar-color: #444 #222;
+        }
+        .history-panel::-webkit-scrollbar {
+            width: 7px;
+            background: transparent;
+        }
+        .history-panel::-webkit-scrollbar-thumb {
+            background: linear-gradient(to bottom, #444, #222 80%);
+            border-radius: 4px;
+        }
+        .history-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .control-panel {
+            position: absolute;
+            top: 50%;
+            left: 32px;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.20);
+            padding: 18px 14px;
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
+            font-size: 14px;
+            min-width: 220px;
+            max-width: 320px;
+            min-height: 300px;
+            max-height: 520px;
+            border-radius: 18px;
+            backdrop-filter: blur(16px);
+            height: auto;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 8px 32px 0 rgba(0,0,0,0.18);
+        }
+        
+
+        
+        .music-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-input-label {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #ffffff;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-family: 'Arial', sans-serif;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .file-input-label:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .music-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #ffffff;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-family: 'Arial', sans-serif;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .music-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .music-button.playing {
+            background: rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        .control-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #ffffff;
+        }
+        
+        .control-value {
+            display: inline-block;
+            margin-left: 10px;
+            color: #cccccc;
+            font-size: 12px;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            border-radius: 2px;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #ffffff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #ffffff;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .camera-button {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 25px;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            text-align: center;
+            pointer-events: auto;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .camera-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .video-button {
+            position: absolute;
+            bottom: 20px;
+            right: 120px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 25px;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            text-align: center;
+            pointer-events: auto;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .video-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .video-button.recording {
+            color: #ff0000;
+            animation: pulse 1s infinite;
+        }
+        
+        .recording-indicator {
+            position: absolute;
+            top: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 12px 22px;
+            border-radius: 24px;
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
+            font-size: 16px;
+            z-index: 100;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+        }
+        
+        .recording-dot {
+            width: 12px;
+            height: 12px;
+            background: #ff0000;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+        
+        .recording-time-display {
+            color: #ff0000;
+            font-weight: bold;
+        }
+        
+        .media-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .media-button {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 12px 20px;
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
+            font-size: 14px;
+            text-align: center;
+            pointer-events: auto;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        .media-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .media-button.recording {
+            color: #ff0000;
+            animation: pulse 1s infinite;
+        }
+        
+        .history-panel {
+            position: absolute;
+            top: 50%;
+            right: 32px;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.20);
+            padding: 18px 14px;
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
+            font-size: 14px;
+            min-width: 220px;
+            max-width: 320px;
+            min-height: 300px;
+            max-height: 520px;
+            border-radius: 18px;
+            backdrop-filter: blur(16px);
+            height: auto;
+            box-sizing: border-box;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 8px 32px 0 rgba(0,0,0,0.18);
+        }
+        
+        .history-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffffff;
+        }
+        
+        .history-item {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .history-item-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .history-item-time {
+            font-size: 12px;
+            color: #cccccc;
+        }
+        
+        .icon-button {
+            background: rgba(0, 0, 0, 0.8);
+            border: none;
+            color: #ffffff;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+            font-size: 18px;
+        }
+        
+        .icon-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .icon-button.recording {
+            color: #ff0000;
+            animation: pulse 1s infinite;
+        }
+        
+        .vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            background: radial-gradient(circle at center, transparent 0%, transparent 60%, rgba(0, 0, 0, 0.3) 100%);
+        }
+        
+        .immersive-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 10000;
+            display: none;
+        }
+        
+        .immersive-canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .immersive-overlay {
+            position: absolute;
+            left: 50%;
+            bottom: 32px;
+            transform: translateX(-50%);
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            font-size: 13px;
+            background: rgba(0,0,0,0.45);
+            padding: 6px 18px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            z-index: 10003;
+            display: none;
+            pointer-events: none;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow: auto;
+        }
+        
+        .screenshot-preview {
+            margin: 20px 0;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+        }
+        
+        .video-preview {
+            margin: 20px 0;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+        }
+        
+        .modal-buttons {
+            margin-top: 20px;
+        }
+        
+        .modal-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #ffffff;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .immersive-fullscreen {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 10001 !important;
+            margin: 0 !important;
+            background: #000 !important;
+        }
+        .vignette.immersive-vignette {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 10002 !important;
+            pointer-events: none;
+            background: radial-gradient(circle at center, transparent 0%, transparent 60%, rgba(0,0,0,0.4) 100%);
+            display: block !important;
+        }
+        .immersive-overlay {
+            display: none;
+        }
+        .loader {
+          border: 4px solid #444;
+          border-top: 4px solid #fff;
+          border-radius: 50%;
+          width: 32px;
+          height: 32px;
+          animation: spin 1s linear infinite;
+          display: inline-block;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .history-item img,
+        .history-item video {
+            width:80px;
+            height:45px;
+            object-fit:cover;
+            aspect-ratio:16/9;
+            border-radius:4px;
+            display:block;
+            margin-bottom:4px;
+            background:#222;
+        }
+        /* --- 新增：底部提示 --- */
+        .spacebar-hint {
+            position: fixed;
+            left: 50%;
+            bottom: 120px;
+            transform: translateX(-50%);
+            color: #fff;
+            background: rgba(0,0,0,0.12);
+            font-family: 'Inter', 'Roboto', 'Arial', sans-serif;
+            font-size: 12px;
+            letter-spacing: 1.2px;
+            padding: 5px 18px;
+            border-radius: 14px;
+            z-index: 10010;
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            opacity: 0.85;
+            font-weight: 300;
+        }
+    </style>
+    <!-- 使用jsdelivr镜像引入ffmpeg.wasm UMD版本 -->
+    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.min.js"></script>
+</head>
+<body>
+    <!-- p5.js 会自动创建一个 canvas 元素 -->
+
+    <!-- 左侧控制面板（合并所有功能） -->
+    <div class="control-panel">
+        <!-- 生物控制区域 -->
+        <div class="control-group">
+            <label class="control-label">
+                Creature Density
+                <span class="control-value" id="densityValue">5</span>
+            </label>
+            <input type="range" class="slider" id="densitySlider" min="2" max="12" value="5">
+        </div>
+        <div class="control-group">
+            <label class="control-label">
+                Ocean Depth
+                <span class="control-value" id="depthValue">50</span>
+            </label>
+            <input type="range" class="slider" id="depthSlider" min="0" max="100" value="50">
+        </div>
+        <div class="control-group">
+            <label class="control-label">
+                Activity Level
+                <span class="control-value" id="activityValue">50</span>
+            </label>
+            <input type="range" class="slider" id="activitySlider" min="0" max="100" value="50">
+        </div>
+        
+        <!-- 音乐控制区域 -->
+        <div class="control-group">
+            <label class="control-label">Background Music</label>
+            <div class="music-controls">
+                <button class="music-button" id="playPauseBtn" title="Play/Pause">
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="6,4 18,11 6,18" />
+                    </svg>
+                </button>
+                <button class="music-button" id="nextTrackBtn" title="Next">
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="4,4 14,11 4,18" />
+                        <rect x="16" y="4" width="2" height="14" rx="1" />
+                    </svg>
+                </button>
+                <label for="fileInput" class="file-input-label" title="Add MP3">
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="9" />
+                        <line x1="11" y1="7" x2="11" y2="15" />
+                        <line x1="7" y1="11" x2="15" y2="11" />
+                    </svg>
+                </label>
+                <input type="file" id="fileInput" class="file-input" accept=".mp3,.MP3" multiple>
+            </div>
+            <div class="control-group">
+                <label class="control-label">
+                    Volume
+                    <span class="control-value" id="volumeValue">50</span>
+                </label>
+                <input type="range" class="slider" id="volumeSlider" min="0" max="100" value="50">
+            </div>
+            <div class="control-group">
+                <label class="control-label">
+                    Track: <span id="currentTrack">Ocean Waves</span>
+                </label>
+            </div>
+        </div>
+        
+        <!-- 录屏和拍照控制区域 -->
+        <div class="control-group">
+            <label class="control-label">Recording & Screenshot</label>
+            <div class="media-controls">
+                <!-- BGM选择下拉框 -->
+                <select id="recordBgmSelect" style="margin-right:10px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px; font-size: 12px;"></select>
+                <button class="icon-button" id="videoButton" title="Record">
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="4" y="7" width="14" height="14" rx="3"/>
+                        <polygon points="18,11 24,7 24,21 18,17"/>
+                    </svg>
+                </button>
+                <button class="icon-button" id="cameraButton" title="Screenshot">
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="8" width="22" height="14" rx="3"/>
+                        <circle cx="14" cy="15" r="4"/>
+                        <rect x="9" y="4" width="4" height="4" rx="1"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 监控器界面覆盖层 -->
+    <div class="monitor-overlay">
+        <div class="recording-controls" id="recordingControls">
+            <div id="recordStatus">Click for Immersive Experience</div>
+        </div>
+        <div class="recording-indicator" id="recordingIndicator">
+            <div class="recording-dot"></div>
+            <span class="recording-time-display" id="recordingTimeDisplay">00:00:00</span>
+        </div>
+    </div>
+
+    <!-- 历史记录面板 -->
+    <div class="history-panel">
+        <div id="historyList">
+            <!-- 历史记录项将在这里动态添加 -->
+        </div>
+    </div>
+
+    <!-- 暗角效果 -->
+    <div class="vignette"></div>
+
+    <!-- 沉浸式体验模式 -->
+    <div class="immersive-mode" id="immersiveMode">
+        <canvas class="immersive-canvas" id="immersiveCanvas"></canvas>
+        <div class="immersive-overlay">
+            Press ESC to exit immersive mode
+        </div>
+    </div>
+    </div>
+
+    <!-- 下载确认弹窗 -->
+    <div class="modal-overlay" id="downloadModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">是否要下载照片？</h3>
+            <img id="screenshotPreview" class="screenshot-preview" style="display: none;">
+            <video id="videoPreview" class="video-preview" style="display: none;" controls></video>
+            <!-- 新增：BGM选择和合成按钮，仅在录屏后显示 -->
+            <div id="bgmSelectContainer" style="display:none; margin-top:20px;">
+                <label style="color:#fff;">Select BGM:</label>
+                <select id="bgmSelect" style="margin:0 10px 0 10px;"></select>
+                <button class="modal-button" id="mergeBgmBtn">合成并试听</button>
+                <!-- 合成进度动画和文本 -->
+                <div id="ffmpegProgress" style="display:none; margin-top:16px; text-align:center;">
+                    <div class="loader" style="margin:0 auto 8px auto;"></div>
+                    <span id="ffmpegProgressText" style="color:#fff;">正在合成...</span>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-button" id="downloadBtn">下载</button>
+                <button class="modal-button" id="cancelBtn">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入 p5.js 库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    
+    <!-- 你的数字生物代码 -->
+    <script>
+        // Global variables for canvas dimensions and base scaling factor
+        let W, H, BASE_SCALE;
+
+        // Array to store all digital creature instances
+        let creatures = [];
+        // NUM_CREATURES will be randomly determined in setup() and keyPressed()
+        let NUM_CREATURES;
+
+        // 监控器相关变量
+        let isRecording = false;
+        let recordingElapsedTime = 0;
+        let lastUpdateTime = 0;
+        let capturedImage = null;
+        
+        // 录像相关变量
+        let isVideoRecording = false;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let videoBlob = null;
+        let videoRecordingStartTime = 0;
+        let recordingTimer = null;
+        let historyItems = [];
+        let isImmersiveMode = false;
+        let immersiveCanvas = null;
+        let immersiveContext = null;
+        
+        // 控制参数变量
+        let creatureDensity = 5;
+        let oceanDepth = 50;
+        let activityLevel = 50;
+        
+        // 音乐相关变量
+        let currentAudio = null;
+        let isPlaying = false;
+        let currentTrackIndex = 0;
+        let volume = 0.5;
+        
+        // 音乐播放列表（本地BGM文件）
+        let musicTracks = [
+          {
+            name: "深海音频",
+            url: "bgm/深海音频.MP3"
+          }
+        ];
+
+        // Define all different types of digital creature rendering logic and default parameters
+        const CREATURE_DEFINITIONS = [
+          // 数字生物01: Original point-based creature (my base)
+          {
+            type: 'point_original',
+            render: function(creatureInstance) {
+              // Set stroke color (white and base transparency)
+              stroke(0, 0, 100, creatureInstance.baseAlpha);
+              // Loop to draw 10,000 points
+              for (let i = 0; i < 1e4; i++) {
+                // Use creature instance's specific divisors to generate varying x and y inputs
+                let x_input = i % creatureInstance.xDivisor;
+                let y_input = i / creatureInstance.yDivisor;
+
+                // Core mathematical formula: calculate point position
+                let k = 5 * cos(x_input / 14) * cos(y_input / 30);
+                let e = y_input / 8 - 13;
+                let d = mag(k, e)**2 / 59 + 4;
+                let q = 60 - 3 * sin(atan2(k, e) * e) + k * (3 + 4 / d * sin(d * d - creatureInstance.t * 2));
+                let c = d / 2 + e / 99 - creatureInstance.t / 18;
+
+                // Calculate coordinates relative to the creature's center, and apply creature's scale
+                let pX_relative = creatureInstance.scale * (q * sin(c));
+                let pY_relative = creatureInstance.scale * ((q + d * 9) * cos(c));
+                // Draw the point, adding the creature's current position for absolute screen coordinates
+                point(pX_relative + creatureInstance.x, pY_relative + creatureInstance.y);
+              }
+            },
+            defaultXDivisor: 200,
+            defaultYDivisor: 43
+          },
+          // 数字生物02: User-provided digital creature 1 and 3 (point-based creatures from first text query)
+          {
+            type: 'point_user_1_3',
+            render: function(creatureInstance) {
+              // Set stroke color (white and base transparency)
+              stroke(0, 0, 100, creatureInstance.baseAlpha);
+              // Loop to draw 10,000 points
+              for (let i = 0; i < 1e4; i++) {
+                // Use creature instance's specific divisors to generate varying x and y inputs
+                let x_input = i % creatureInstance.xDivisor;
+                let y_input = i / creatureInstance.yDivisor;
+
+                // Core mathematical formula: calculate point position (from user-provided formula)
+                let k = 9 * cos(x_input / 8);
+                let e = y_input / 8 - 12.5;
+                let d = mag(k, e)**2 / 99 + sin(creatureInstance.t) / 6 + 0.5;
+                let q = 99 - e * sin(atan2(k, e) * 7) / d + k * (3 + cos(d * d - creatureInstance.t) * 2);
+                let c = d / 2 + e / 69 - creatureInstance.t / 16;
+
+                // Calculate coordinates relative to the creature's center, and apply creature's scale
+                let pX_relative = creatureInstance.scale * (q * sin(c));
+                let pY_relative = creatureInstance.scale * ((q + 19 * d) * cos(c));
+                // Draw the point, adding the creature's current position for absolute screen coordinates
+                point(pX_relative + creatureInstance.x, pY_relative + creatureInstance.y);
+              }
+            },
+            defaultXDivisor: 200,
+            defaultYDivisor: 55 // Based on i/55 in the user's provided code
+          },
+          // 数字生物03: User-provided digital creature from image_7f4760.jpg
+          {
+            type: 'point_user_from_7f4760',
+            render: function(creatureInstance) {
+              // Set stroke color (white and base transparency)
+              stroke(0, 0, 100, creatureInstance.baseAlpha);
+              // Loop to draw 10,000 points
+              for (let i = 0; i < 1e4; i++) {
+                // Use creature instance's specific divisors to generate varying x and y inputs
+                let x_input = i % creatureInstance.xDivisor;
+                let y_input = i / creatureInstance.yDivisor;
+
+                // Core mathematical formula: calculate point position (from the provided formula)
+                let k = (4 + sin(y_input * 2 - creatureInstance.t) * 3) * cos(x_input / 29);
+                let e = y_input / 8 - 13;
+                let d = mag(k, e)**2 / 99 + sin(creatureInstance.t) / 6 + 0.5;
+                let c = d - creatureInstance.t;
+
+                let q_reconstructed = (3 * sin(k * 2) + 0.3 / k + sin(y_input / 25)) * k * (9 + 4 * sin(e * 9 - d * 3 + creatureInstance.t * 2));
+                
+                let pX_relative = creatureInstance.scale * (q_reconstructed + 30 * cos(c));
+                let pY_relative = creatureInstance.scale * (q_reconstructed * sin(c) + d * 39 - 220);
+
+                // Draw the point, adding the creature's current position for absolute screen coordinates
+                point(pX_relative + creatureInstance.x, pY_relative + creatureInstance.y);
+              }
+            },
+            defaultXDivisor: 235, // Based on i/235 in the user's provided code
+            defaultYDivisor: 8 // Based on y/8 in the user's provided code for 'e'
+          },
+          // 数字生物04: 数字水母1号 from image_2c7c1c.png (also previously image_7f42eb.png)
+          {
+            type: 'point_user_jellyfish_1',
+            render: function(creatureInstance) {
+              // Set stroke color (white and base transparency)
+              stroke(0, 0, 100, creatureInstance.baseAlpha);
+              // Loop to draw points
+              for (let i = 0; i < 4e4; i++) { // This creature uses 4e4 points
+                // Use creature instance's specific divisors to generate varying x and y inputs
+                let x_input = i % creatureInstance.xDivisor;
+                let y_input = i / creatureInstance.yDivisor;
+
+                // Core mathematical formula: calculate point position (from the new user-provided formula)
+                let o = mag(x_input / 8 - 12.5, y_input / 8 - 12.5)**2 / 139;
+                let k = 9 * cos(o);
+                let d = k; // In the original formula, 'd' is assigned 'k' from the line above.
+
+                let pX_relative = (x_input + sin(d) * d * k) / 2 + 150 + o * k * sin(creatureInstance.t + d * o);
+                let pY_relative = y_input / 9 - d * 15 - cos(d * 2) * d + 220 + d * sin(d - creatureInstance.t);
+
+                // Apply creature's scale to the relative coordinates
+                pX_relative *= creatureInstance.scale / BASE_SCALE;
+                pY_relative *= creatureInstance.scale / BASE_SCALE;
+
+                // Draw the point, adding the creature's current position for absolute screen coordinates
+                point(pX_relative + creatureInstance.x, pY_relative + creatureInstance.y);
+              }
+            },
+            defaultXDivisor: 200, // Based on i%200 in the user's provided code
+            defaultYDivisor: 200  // Based on i/200 in the user's provided code
+          },
+          // 数字生物05: Jellyfish-like creature from image_802138.png (and previous "水母" code)
+          {
+            type: 'point_user_jellyfish_type_1',
+            render: function(creatureInstance) {
+              // Set stroke color (white and base transparency)
+              stroke(0, 0, 100, creatureInstance.baseAlpha);
+              // Loop to draw 10,000 points (original code uses 1e4)
+              for (let i = 0; i < 1e4; i++) {
+                let x_input = i % creatureInstance.xDivisor;
+                let y_input = i / creatureInstance.yDivisor;
+
+                // Original formula's 'pt' and 'pt2' are now creature-specific
+                let k = (creatureInstance.pt_jellyfish + sin(y_input * 5 - creatureInstance.t) * 3) * cos(x_input / creatureInstance.pt2_jellyfish);
+                let e = y_input / 8 - 13;
+                let d = mag(k, e); // Original 'd' calculation
+
+                let q = 3 * sin(k * 2) + 0.3 / k + sin(y_input / 25) * k * (9 + 4 * sin(e * 9 - d * 3 + creatureInstance.t * 2));
+                let c = d - creatureInstance.t;
+
+                let basePx = q + 39 * cos(c);
+                let basePy = q * sin(c) + d * 39;
+
+                // Apply creature's scale and position
+                point(basePx * creatureInstance.scale + creatureInstance.x, basePy * creatureInstance.scale + creatureInstance.y);
+              }
+            },
+            defaultXDivisor: 200, // Based on i%200
+            defaultYDivisor: 235, // Based on i/235
+            // Add new properties for pt and pt2 for this specific creature type
+            jellyfishPtRange: [4, 25], // Range for pt
+            jellyfishPt2Range: [2, 39] // Range for pt2
+          },
+          // 数字生物06: 函数之美 from image_2c7910.png (newly added)
+          {
+            type: 'point_user_dragon_like',
+            render: function(creatureInstance) {
+              // Set stroke color (white and base transparency)
+              stroke(0, 0, 100, creatureInstance.baseAlpha);
+              // Loop to draw 10,000 points (original code uses 1e4)
+              for (let i = 0; i < 1e4; i++) {
+                let x_input = i; // Original formula uses 'i' directly for x
+                let y_input = i / creatureInstance.yDivisor; // Original formula uses 'i/235' for y
+
+                // Core mathematical formula: calculate point position (from the new user-provided formula)
+                let k = (4 + cos(y_input)) * cos(x_input / 4);
+                let e = y_input / 8 - 20;
+                let d = mag(k, e); // 'd' is from mag(k,e)
+
+                let q = (sin(k * 3) + sin(y_input / 19 + 9) * k * (6 + sin(e * 14 - d)));
+                let c = d - creatureInstance.t; // 'c' is d-t
+
+                let pX_relative = q * cos(d / 8 + creatureInstance.t / 4) + 50 * cos(c) + 200;
+                let pY_relative = q * sin(c) + d * 7 * sin(c / 4) + 200;
+
+                // Apply creature's scale and position
+                point(pX_relative * creatureInstance.scale / BASE_SCALE + creatureInstance.x, pY_relative * creatureInstance.scale / BASE_SCALE + creatureInstance.y);
+              }
+            },
+            defaultXDivisor: 1, // 'i' directly, so effectively 1
+            defaultYDivisor: 235 // Based on i/235
+          },
+          // 数字生物07: 钟形水母 (New - Bell-like Jellyfish)
+          {
+            type: 'point_user_bell_jellyfish',
+            render: function(creatureInstance) {
+              stroke(0, 0, 100, creatureInstance.baseAlpha);
+              for (let i = 0; i < 1.5e4; i++) { // More points for a denser shape
+                let x_input = i % creatureInstance.xDivisor;
+                let y_input = i / creatureInstance.yDivisor;
+
+                // Create a bell-like shape with pulsation
+                let bellWidth = map(sin(y_input / 20 + creatureInstance.t * 0.5), -1, 1, 0.5, 1.5); // Pulsating width
+                let bellHeight = map(cos(x_input / 30 + creatureInstance.t * 0.3), -1, 1, 0.8, 1.2); // Subtle height variation
+
+                let k = bellWidth * cos(x_input / creatureInstance.xDivisor_bell * PI);
+                let e = y_input / creatureInstance.yDivisor_bell - 10;
+                let d = mag(k, e)**2 / 50 + 2;
+
+                let q = 40 - e * sin(atan2(k, e) * 5) / d + k * (2 + 3 / d * sin(d * d - creatureInstance.t));
+                let c = d / 2 + e / 80 - creatureInstance.t / 15;
+
+                let pX_relative = creatureInstance.scale * (q * sin(c) * bellHeight);
+                let pY_relative = creatureInstance.scale * ((q + d * 5) * cos(c) * bellHeight);
+
+                point(pX_relative + creatureInstance.x, pY_relative + creatureInstance.y);
+              }
+            },
+            defaultXDivisor: 200,
+            defaultYDivisor: 50,
+            // Custom divisors for this specific type to control bell shape
+            xDivisor_bell: 50,
+            yDivisor_bell: 10
+          },
+          // 数字生物08: 螺旋触手水母 (New - Spiral Tentacle Jellyfish)
+          {
+            type: 'point_user_spiral_jellyfish',
+            render: function(creatureInstance) {
+              stroke(0, 0, 100, creatureInstance.baseAlpha);
+              for (let i = 0; i < 2e4; i++) { // More points for tentacles
+                let x_input = i % creatureInstance.xDivisor;
+                let y_input = i / creatureInstance.yDivisor;
+
+                // Create a spiral/swirling tentacle effect
+                let angle = y_input * 0.1 + creatureInstance.t * 0.8; // Base angle, influenced by time
+                let radius = map(x_input, 0, creatureInstance.xDivisor, 0, 30); // Radius increases with x_input
+                
+                let spiralX = radius * cos(angle + x_input * 0.05); // Add x_input to angle for spiral
+                let spiralY = radius * sin(angle + x_input * 0.05);
+
+                // Add a vertical component for tentacle length
+                let tentacleLength = y_input * 0.5; // Tentacles extend downwards
+                let wave = sin(x_input * 0.1 + creatureInstance.t) * 5; // Subtle wave effect
+
+                let pX_relative = creatureInstance.scale * (spiralX + wave);
+                let pY_relative = creatureInstance.scale * (spiralY + tentacleLength);
+
+                point(pX_relative + creatureInstance.x, pY_relative + creatureInstance.y);
+              }
+            },
+            defaultXDivisor: 100, // Controls tentacle density horizontally
+            defaultYDivisor: 200  // Controls tentacle length
+          }
+        ];
+
+        // --- Incomplete/Unclear Creature Definitions (for reference, not active) ---
+        /*
+        // 数字水母#2 from image_2c7be0.png (Incomplete Bezier Creature)
+        // f=0,draw=o=>{for(f||createCanvas(W=400,W),background(P=PI,d=200),N=noise,a=-P;a<P;a+=P/16)for(fill(W,3),bezier(d,Y=150+9*cos(9*f), #代码动画
+        // This code snippet is incomplete and uses a bezier function which is a different rendering style.
+        // It would require more context to be fully implemented.
+
+        // 数字水母5# from image_2c7934.png (Incomplete Point Creature with typos)
+        // 公式: ア - a=(x,y,o=mag(k=x4-12.5,e=y9))=>&gtpoint((q=x3+99+3ksin(y) #代码艺术 #水
+        // This code snippet contains typos (x4, y9, &gtpoint, x3) and is incomplete.
+        // It would require correction and more context to be fully implemented.
+        */
+        // --- End of Incomplete/Unclear Creature Definitions ---
+
+
+        // Creature class defines the properties and behavior of each digital creature
+        class Creature {
+          constructor(id) {
+            this.id = id;
+            // Randomly select a creature type definition
+            this.definition = random(CREATURE_DEFINITIONS);
+            this.type = this.definition.type; // Store type for debugging
+
+            // Initialize parameters, including parameters based on the selected type
+            this.randomizeParameters();
+
+            // Noise offsets for continuous random movement
+            this.xNoiseOffset = random(1000);
+            this.yNoiseOffset = random(1000);
+            this.velNoiseScale = 0.005; // How fast the noise changes over time
+            this.maxSpeed = 5; // Increased from 3 to 5 for more noticeable movement
+          }
+
+          // Randomize all parameters of the creature
+          randomizeParameters() {
+            this.t = random(TWO_PI); // Starting time for internal animation
+            this.x = random(width);      // Initial X position of the creature
+            this.y = random(height);    // Initial Y position of the creature
+            
+            // Initial velocities are now influenced by noise
+            this.velX = map(noise(this.xNoiseOffset), 0, 1, -1, 1);
+            this.velY = map(noise(this.yNoiseOffset), 0, 1, -1, 1);
+
+            // More significant size difference, higher max value
+            this.scale = BASE_SCALE + random(-3, 15); // Adjust range for larger size differentiation
+
+            this.baseAlpha = random(0.4, 0.8); // Transparency randomly between 0.4 and 0.8
+
+            // Subtle variations in shape: only applicable to point-based creatures
+            if (this.type.startsWith('point')) {
+              // For 'point_user_dragon_like', xDivisor is effectively 1 as 'i' is used directly
+              this.xDivisor = (this.definition.defaultXDivisor === 1) ? 1 : (this.definition.defaultXDivisor || 200) + random(-70, 70);
+              this.yDivisor = (this.definition.defaultYDivisor || 43) + random(-15, 15);
+            } else {
+              this.xDivisor = null; // Not applicable for non-point-based creatures
+              this.yDivisor = null; // Not applicable for non-point-based creatures
+            }
+
+            // Specific parameters for the jellyfish type
+            if (this.type === 'point_user_jellyfish_type_1') {
+              this.pt_jellyfish = random(this.definition.jellyfishPtRange[0], this.definition.jellyfishPt2Range[1]);
+              this.pt2_jellyfish = random(this.definition.jellyfishPt2Range[0], this.definition.jellyfishPt2Range[1]);
+            } else {
+              this.pt_jellyfish = null;
+              this.pt2_jellyfish = null;
+            }
+
+            // Specific parameters for the new bell jellyfish type
+            if (this.type === 'point_user_bell_jellyfish') {
+                this.xDivisor_bell = (this.definition.xDivisor_bell || 50) + random(-10, 10);
+                this.yDivisor_bell = (this.definition.yDivisor_bell || 10) + random(-2, 2);
+            } else {
+                this.xDivisor_bell = null;
+                this.yDivisor_bell = null;
+            }
+
+            // Variation in movement speed
+            this.baseSpeedFactor = random(0.5, 1.5);
+
+            // Variation in movement direction (forward or reverse animation)
+            this.directionFactor = random() > 0.5 ? 1 : -1;
+          }
+
+          // Update the creature's state (position, internal animation time, and continuous movement)
+          update() {
+            // Activity level affects animation and movement speed
+            const activityFactor = activityLevel / 50; // 0-2 range, 1 is normal speed
+            
+            // Internal animation speed, affected by activity level
+            this.t += (PI / 20) * this.baseSpeedFactor * this.directionFactor * activityFactor;
+
+            // Continuous random movement using Perlin noise, affected by activity level
+            const currentMaxSpeed = this.maxSpeed * activityFactor;
+            this.velX = map(noise(this.xNoiseOffset), 0, 1, -currentMaxSpeed, currentMaxSpeed);
+            this.velY = map(noise(this.yNoiseOffset), 0, 1, -currentMaxSpeed, currentMaxSpeed);
+
+            this.xNoiseOffset += this.velNoiseScale * activityFactor;
+            this.yNoiseOffset += this.velNoiseScale * activityFactor;
+
+            // Update creature's position
+            this.x += this.velX;
+            this.y += this.velY;
+
+            // Screen boundary handling: if creature goes off-screen, it reappears from the opposite side (looping effect)
+            if (this.x < 0) this.x = width;
+            if (this.x > width) this.x = 0;
+            if (this.y < 0) this.y = height;
+            if (this.y > height) this.y = 0;
+          }
+
+          // Draw a single digital creature
+          draw() {
+            // Call the corresponding render function from the creature type definition
+            this.definition.render(this);
+          }
+        }
+
+        // setup() function, runs once when the p5.js program starts
+        function setup() {
+          W = 1920; // Set canvas width to 1920 pixels
+          H = 1080; // Set canvas height to 1080 pixels
+          BASE_SCALE = 4; // Base scaling factor
+          let cnv = createCanvas(W, H); // Create the canvas
+          cnv.id('mainCanvas'); // 给主canvas加id
+          // Set color mode to HSB (Hue, Saturation, Brightness) for easier color control
+          colorMode(HSB, 360, 100, 100, 1);
+          resetCreatures();
+          initializeMonitor();
+        }
+
+        // draw() is the main p5.js drawing loop function, runs every frame
+        function draw() {
+          // Draw the gradient background
+          drawDeepSeaGradient();
+          // Iterate through all digital creature instances and update and draw them
+          for (let i = 0; i < creatures.length; i++) {
+            creatures[i].update();
+            creatures[i].draw();
+          }
+          // Draw the water overlay on top of everything
+          drawWaterOverlay();
+          // 更新监控器显示
+          updateMonitor();
+        }
+
+        // Helper function to draw the deep sea gradient background
+        function drawDeepSeaGradient() {
+          noStroke(); // Ensure no stroke for the rectangles forming the gradient
+
+          // Define HSB colors for the gradient based on ocean depth
+          const depthFactor = oceanDepth / 100; // 0-1 range
+          
+          const bottomHue = 220; // Deep blue hue
+          const bottomSat = 70;  // High saturation for richness
+          const bottomBright = map(depthFactor, 0, 1, 30, 5); // Deeper = darker
+
+          const topHue = 210;    // Slightly greenish blue for higher depth
+          const topSat = map(depthFactor, 0, 1, 60, 30); // Deeper = less saturated
+          const topBright = map(depthFactor, 0, 1, 50, 15); // Deeper = darker
+
+          // Draw horizontal lines to create the gradient
+          for (let y = 0; y < height; y++) {
+            // Calculate interpolation factor (0 at top, 1 at bottom)
+            let inter = map(y, 0, height, 0, 1);
+
+            // Interpolate HSB components
+            let currentHue = lerp(topHue, bottomHue, inter);
+            let currentSat = lerp(topSat, bottomSat, inter);
+            let currentBright = lerp(topBright, bottomBright, inter);
+
+            fill(currentHue, currentSat, currentBright);
+            rect(0, y, width, 1); // Draw a 1-pixel high rectangle across the canvas width
+          }
+        }
+
+        // Helper function to draw the blue gradient overlay with blend mode
+        function drawWaterOverlay() {
+          // Use a time variable for color fluctuation
+          let overlayTime = frameCount * 0.01; // Adjust speed of fluctuation
+
+          // Define top and bottom HSB colors for the overlay, with fluctuation
+          // Hue will be around blue (e.g., 200-240)
+          // Saturation will fluctuate
+          // Brightness will fluctuate
+          // Alpha will be fixed for the overlay itself
+
+          let topOverlayHue = map(sin(overlayTime * 0.5), -1, 1, 200, 220); // Subtle hue shift
+          let topOverlaySat = map(sin(overlayTime * 0.7), -1, 1, 30, 50);   // Saturation flicker
+          let topOverlayBright = map(sin(overlayTime * 0.9), -1, 1, 60, 80); // Brightness flicker
+          const topOverlayAlpha = 0.3; // Fixed alpha for the top of the overlay
+
+          let bottomOverlayHue = map(sin(overlayTime * 0.4), -1, 1, 210, 230); // Subtle hue shift
+          let bottomOverlaySat = map(sin(overlayTime * 0.6), -1, 1, 50, 70);   // Saturation flicker
+          let bottomOverlayBright = map(sin(overlayTime * 0.8), -1, 1, 20, 40); // Brightness flicker
+          const bottomOverlayAlpha = 0.5; // Fixed alpha for the bottom of the overlay
+
+          // Apply multiply blend mode
+          blendMode(MULTIPLY);
+          noStroke();
+
+          for (let y = 0; y < height; y++) {
+            let inter = map(y, 0, height, 0, 1);
+
+            let currentHue = lerp(topOverlayHue, bottomOverlayHue, inter);
+            let currentSat = lerp(topOverlaySat, bottomOverlaySat, inter); // Corrected variable name
+            let currentBright = lerp(topOverlayBright, bottomOverlayBright, inter); // Corrected variable name
+            let currentAlpha = lerp(topOverlayAlpha, bottomOverlayAlpha, inter);
+
+            fill(currentHue, currentSat, currentBright, currentAlpha * 100); // HSB alpha is 0-100
+            rect(0, y, width, 1);
+          }
+
+          // Reset blend mode to default
+          blendMode(BLEND);
+        }
+
+        // keyPressed() function, called when any key is pressed
+        function keyPressed() {
+          // Check if the pressed key is the spacebar
+          if (key === ' ') {
+            // 随机化三个参数
+            creatureDensity = Math.floor(random(2, 13));
+            oceanDepth = Math.floor(random(0, 101));
+            activityLevel = Math.floor(random(0, 101));
+            // 更新滑块UI
+            document.getElementById('densitySlider').value = creatureDensity;
+            document.getElementById('densityValue').textContent = creatureDensity;
+            document.getElementById('depthSlider').value = oceanDepth;
+            document.getElementById('depthValue').textContent = oceanDepth;
+            document.getElementById('activitySlider').value = activityLevel;
+            document.getElementById('activityValue').textContent = activityLevel;
+            // 刷新生物
+            resetCreatures();
+          }
+        }
+
+        // Helper function to reset creatures
+        function resetCreatures() {
+          creatures = []; // Clear existing creatures
+          NUM_CREATURES = creatureDensity; // Use density parameter for creature count
+          for (let i = 0; i < NUM_CREATURES; i++) {
+            creatures.push(new Creature(i)); // Create new creature instances, they will randomly select their type
+          }
+        }
+
+        // 监控器相关函数
+        function initializeMonitor() {
+          // 设置记录控制按钮的点击事件
+          document.getElementById('recordingControls').addEventListener('click', toggleImmersiveMode);
+          // 设置拍照按钮的点击事件
+          document.getElementById('cameraButton').addEventListener('click', takeScreenshot);
+          // 设置录像按钮的点击事件
+          document.getElementById('videoButton').addEventListener('click', toggleVideoRecording);
+          // 设置弹窗按钮事件
+          document.getElementById('downloadBtn').addEventListener('click', downloadMedia);
+          document.getElementById('cancelBtn').addEventListener('click', closeModal);
+          // 设置控制面板事件
+          initializeControlPanel();
+          // 设置音乐控制事件
+          initializeMusicControls();
+          // 初始化录制BGM选择下拉框
+          initializeRecordBgmSelect();
+        }
+
+        function updateMonitor() {
+          // 更新记录时间
+          if (isRecording) {
+            const currentTime = Date.now();
+            recordingElapsedTime = currentTime - recordingStartTime;
+            
+            const hours = Math.floor(recordingElapsedTime / (1000 * 60 * 60));
+            const minutes = Math.floor((recordingElapsedTime % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((recordingElapsedTime % (1000 * 60)) / 1000);
+            
+            const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('recordingTime').textContent = timeString;
+          }
+        }
+
+        function toggleImmersiveMode() {
+          if (isImmersiveMode) {
+            exitImmersiveMode();
+          } else {
+            enterImmersiveMode();
+          }
+        }
+
+        function enterImmersiveMode() {
+          isImmersiveMode = true;
+          // 隐藏所有UI元素
+          document.querySelector('.control-panel').style.display = 'none';
+          document.querySelector('.monitor-overlay').style.display = 'none';
+          document.querySelector('.history-panel').style.display = 'none';
+          // 不再隐藏vignette，而是全屏显示
+          const vignette = document.querySelector('.vignette');
+          vignette.classList.add('immersive-vignette');
+          vignette.style.display = 'block';
+          // 放大主canvas到全屏并自适应
+          resizeCanvas(window.innerWidth, window.innerHeight);
+          W = window.innerWidth;
+          H = window.innerHeight;
+          // 显示沉浸式提示
+          document.querySelector('.immersive-overlay').style.display = 'block';
+          // 添加ESC键监听
+          document.addEventListener('keydown', handleImmersiveKeydown);
+          // 监听窗口resize
+          window.addEventListener('resize', immersiveResizeHandler);
+        }
+
+        function immersiveResizeHandler() {
+          if (isImmersiveMode) {
+            resizeCanvas(window.innerWidth, window.innerHeight);
+            W = window.innerWidth;
+            H = window.innerHeight;
+          }
+        }
+
+        function exitImmersiveMode() {
+          isImmersiveMode = false;
+          // 恢复所有UI元素
+          document.querySelector('.control-panel').style.display = 'block';
+          document.querySelector('.monitor-overlay').style.display = 'block';
+          document.querySelector('.history-panel').style.display = 'block';
+          // 恢复主canvas样式
+          const mainCanvas = document.getElementById('mainCanvas');
+          mainCanvas.classList.remove('immersive-fullscreen');
+          // 恢复vignette样式
+          const vignette = document.querySelector('.vignette');
+          vignette.classList.remove('immersive-vignette');
+          vignette.style.display = 'block';
+          // 隐藏沉浸式提示
+          document.querySelector('.immersive-overlay').style.display = 'none';
+          // 移除ESC键监听
+          document.removeEventListener('keydown', handleImmersiveKeydown);
+          // 取消resize监听
+          window.removeEventListener('resize', immersiveResizeHandler);
+          // 恢复canvas为默认尺寸
+          resizeCanvas(1920, 1080);
+          W = 1920;
+          H = 1080;
+        }
+
+        function handleImmersiveKeydown(event) {
+          if (event.key === 'Escape') {
+            exitImmersiveMode();
+          }
+        }
+
+        function takeScreenshot() {
+          // 隐藏监控器界面
+          const monitorOverlay = document.querySelector('.monitor-overlay');
+          monitorOverlay.style.display = 'none';
+          setTimeout(() => {
+            // 只截取主canvas
+            const canvas = document.getElementById('mainCanvas');
+            const imageDataUrl = canvas.toDataURL('image/png');
+            // 设置预览图片
+            const previewImg = document.getElementById('screenshotPreview');
+            previewImg.src = imageDataUrl;
+            previewImg.style.display = 'block';
+            // 确保视频预览隐藏
+            const videoPreview = document.getElementById('videoPreview');
+            videoPreview.style.display = 'none';
+            videoPreview.src = '';
+            // 更新弹窗标题
+            document.getElementById('modalTitle').textContent = 'Download Screenshot?';
+            // 显示弹窗
+            document.getElementById('downloadModal').style.display = 'flex';
+            // 重新显示监控器界面
+            monitorOverlay.style.display = 'block';
+            // 添加到历史记录
+            addToHistory('Screenshot', imageDataUrl);
+          }, 100);
+        }
+
+        function downloadImage() {
+          // 获取预览图片的src
+          const previewImg = document.getElementById('screenshotPreview');
+          const imageDataUrl = previewImg.src;
+          
+          // 创建下载链接
+          const link = document.createElement('a');
+          link.download = 'digital_creatures_screenshot.png';
+          link.href = imageDataUrl;
+          
+          // 触发下载
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // 隐藏弹窗
+          closeModal();
+        }
+
+        function closeModal() {
+          document.getElementById('downloadModal').style.display = 'none';
+          // 隐藏预览图片和视频
+          document.getElementById('screenshotPreview').style.display = 'none';
+          document.getElementById('videoPreview').style.display = 'none';
+          // 释放 video src，仅释放临时预览url，不释放历史url
+          const videoPreview = document.getElementById('videoPreview');
+          if (videoPreview._tempUrl) {
+            URL.revokeObjectURL(videoPreview._tempUrl);
+            videoPreview._tempUrl = null;
+            videoPreview.src = '';
+          }
+          // 隐藏BGM选择区
+          document.getElementById('bgmSelectContainer').style.display = 'none';
+          // 恢复BGM播放（如有需要）
+          if (wasBgmPlaying && currentAudio && currentAudio.paused) {
+            currentAudio.play();
+          }
+        }
+
+        // 录像相关函数
+        async function toggleVideoRecording() {
+          if (isVideoRecording) {
+            // 停止录像
+            stopVideoRecording();
+          } else {
+            // 开始录像
+            startVideoRecording();
+          }
+        }
+
+        async function startVideoRecording() {
+          try {
+            const canvas = document.getElementById('mainCanvas');
+            const stream = canvas.captureStream(30); // 画面流
+            // 获取用户选择的BGM
+            const bgmIdx = document.getElementById('recordBgmSelect').value;
+            const bgmTrack = musicTracks[bgmIdx];
+            // 创建audio元素用于captureStream
+            const audio = new Audio(bgmTrack.url);
+            audio.loop = true;
+            audio.volume = volume;
+            await audio.play(); // 必须先play才能captureStream
+            let combinedStream = null;
+            if (audio.captureStream) {
+              const audioStream = audio.captureStream();
+              combinedStream = new MediaStream([
+                ...stream.getVideoTracks(),
+                ...audioStream.getAudioTracks()
+              ]);
+            } else {
+              combinedStream = stream;
+            }
+            mediaRecorder = new MediaRecorder(combinedStream, {
+              mimeType: 'video/webm;codecs=vp9'
+            });
+            recordedChunks = [];
+            mediaRecorder.ondataavailable = (event) => {
+              if (event.data.size > 0) {
+                recordedChunks.push(event.data);
+              }
+            };
+            mediaRecorder.onstop = () => {
+              videoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+              showVideoPreview();
+              stopRecordingTimer();
+              // 添加到历史记录
+              const historyVideoUrl = URL.createObjectURL(videoBlob);
+              addToHistory('Video Recording', historyVideoUrl);
+              // 停止BGM播放
+              audio.pause();
+              audio.src = '';
+            };
+            mediaRecorder.start();
+            isVideoRecording = true;
+            videoRecordingStartTime = Date.now();
+            // 显示录屏指示器
+            document.getElementById('recordingIndicator').style.display = 'flex';
+            startRecordingTimer();
+            // 只用class切换按钮状态，不再用textContent
+            const videoButton = document.getElementById('videoButton');
+            videoButton.classList.add('recording');
+          } catch (error) {
+            console.error('录像启动失败:', error);
+            alert('录像功能启动失败，请检查浏览器权限设置。\n详细信息: ' + error.message);
+          }
+        }
+
+        function stopVideoRecording() {
+          if (mediaRecorder && isVideoRecording) {
+            mediaRecorder.stop();
+            isVideoRecording = false;
+            // 隐藏录屏指示器
+            document.getElementById('recordingIndicator').style.display = 'none';
+            stopRecordingTimer();
+            // 只用class切换按钮状态，不再用textContent
+            const videoButton = document.getElementById('videoButton');
+            videoButton.classList.remove('recording');
+          }
+        }
+
+        function showVideoPreview() {
+          // 自动暂停BGM
+          if (currentAudio && !currentAudio.paused) {
+            wasBgmPlaying = true;
+            currentAudio.pause();
+          } else {
+            wasBgmPlaying = false;
+          }
+          // 隐藏监控器界面
+          const monitorOverlay = document.querySelector('.monitor-overlay');
+          monitorOverlay.style.display = 'none';
+          setTimeout(() => {
+            // 设置视频预览
+            const videoPreview = document.getElementById('videoPreview');
+            // 生成临时url用于弹窗预览
+            const tempVideoUrl = URL.createObjectURL(videoBlob);
+            videoPreview.src = tempVideoUrl;
+            videoPreview.style.display = 'block';
+            videoPreview.load();
+            // 确保图片预览隐藏
+            const previewImg = document.getElementById('screenshotPreview');
+            previewImg.style.display = 'none';
+            previewImg.src = '';
+            // 更新弹窗标题
+            document.getElementById('modalTitle').textContent = 'Download Video?';
+            // 显示弹窗
+            document.getElementById('downloadModal').style.display = 'flex';
+            // 重新显示监控器界面
+            monitorOverlay.style.display = 'block';
+            // 关闭弹窗时释放临时url
+            videoPreview._tempUrl = tempVideoUrl;
+            // 新增：显示BGM选择区
+            const bgmSelectContainer = document.getElementById('bgmSelectContainer');
+            bgmSelectContainer.style.display = 'block';
+            // 填充BGM下拉框
+            const bgmSelect = document.getElementById('bgmSelect');
+            bgmSelect.innerHTML = '';
+            musicTracks.forEach((track, idx) => {
+              const opt = document.createElement('option');
+              opt.value = idx;
+              opt.textContent = track.name;
+              bgmSelect.appendChild(opt);
+            });
+          }, 100);
+        }
+
+        function downloadMedia() {
+          const modalTitle = document.getElementById('modalTitle').textContent;
+          
+          if (modalTitle.includes('Video')) {
+            // 下载视频
+            if (videoBlob) {
+              const link = document.createElement('a');
+              link.download = 'digital_creatures_video.webm';
+              link.href = URL.createObjectURL(videoBlob);
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }
+          } else {
+            // 下载图片
+            const previewImg = document.getElementById('screenshotPreview');
+            const imageDataUrl = previewImg.src;
+            
+            const link = document.createElement('a');
+            link.download = 'digital_creatures_screenshot.png';
+            link.href = imageDataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }
+          
+          closeModal();
+        }
+
+        // 控制面板相关函数
+        function initializeControlPanel() {
+          // 密度控制
+          const densitySlider = document.getElementById('densitySlider');
+          const densityValue = document.getElementById('densityValue');
+          
+          densitySlider.addEventListener('input', function() {
+            creatureDensity = parseInt(this.value);
+            densityValue.textContent = creatureDensity;
+            updateCreatureCount();
+          });
+          
+          // 海洋深度控制
+          const depthSlider = document.getElementById('depthSlider');
+          const depthValue = document.getElementById('depthValue');
+          
+          depthSlider.addEventListener('input', function() {
+            oceanDepth = parseInt(this.value);
+            depthValue.textContent = oceanDepth;
+          });
+          
+          // 活跃度控制
+          const activitySlider = document.getElementById('activitySlider');
+          const activityValue = document.getElementById('activityValue');
+          
+          activitySlider.addEventListener('input', function() {
+            activityLevel = parseInt(this.value);
+            activityValue.textContent = activityLevel;
+          });
+        }
+
+        function updateCreatureCount() {
+          // 重新生成生物，数量基于密度参数
+          resetCreatures();
+        }
+
+        // 音乐控制相关函数
+        function initializeMusicControls() {
+          // 播放/暂停按钮
+          const playPauseBtn = document.getElementById('playPauseBtn');
+          playPauseBtn.addEventListener('click', togglePlayPause);
+          // 下一曲按钮
+          const nextTrackBtn = document.getElementById('nextTrackBtn');
+          nextTrackBtn.addEventListener('click', nextTrack);
+          // 音量控制
+          const volumeSlider = document.getElementById('volumeSlider');
+          const volumeValue = document.getElementById('volumeValue');
+          volumeSlider.addEventListener('input', function() {
+            volume = parseInt(this.value) / 100;
+            volumeValue.textContent = this.value;
+            if (currentAudio) {
+              currentAudio.volume = volume;
+            }
+          });
+          // 文件选择功能
+          const fileInput = document.getElementById('fileInput');
+          fileInput.addEventListener('change', handleFileSelect);
+          // 初始化音频
+          loadTrack(currentTrackIndex);
+        }
+
+        // 新增：首次用户交互后自动播放音频
+        let audioAutoPlayed = false;
+        function tryAutoPlayAudio() {
+          if (!audioAutoPlayed) {
+            togglePlayPause();
+            audioAutoPlayed = true;
+          }
+        }
+        document.addEventListener('click', tryAutoPlayAudio, { once: true });
+
+        function loadTrack(index) {
+          if (currentAudio) {
+            currentAudio.pause();
+            currentAudio = null;
+          }
+          
+          currentTrackIndex = index;
+          const track = musicTracks[index];
+          
+          currentAudio = new Audio(track.url);
+          currentAudio.volume = volume;
+          currentAudio.loop = true;
+          
+          // 更新界面显示
+          document.getElementById('currentTrack').textContent = track.name;
+          
+          // 音频加载事件
+          currentAudio.addEventListener('canplaythrough', function() {
+            console.log('Audio loaded successfully');
+          });
+          
+          currentAudio.addEventListener('error', function(e) {
+            console.error('Audio loading error:', e);
+            // 如果加载失败，尝试下一首
+            setTimeout(() => {
+              if (currentTrackIndex === index) { // 确保还是当前曲目
+                nextTrack();
+              }
+            }, 1000);
+          });
+        }
+
+        function togglePlayPause() {
+          if (!currentAudio) {
+            loadTrack(currentTrackIndex);
+          }
+          
+          if (isPlaying) {
+            currentAudio.pause();
+            isPlaying = false;
+            document.getElementById('playPauseBtn').textContent = 'Play';
+            document.getElementById('playPauseBtn').classList.remove('playing');
+          } else {
+            currentAudio.play().then(() => {
+              isPlaying = true;
+              document.getElementById('playPauseBtn').textContent = 'Pause';
+              document.getElementById('playPauseBtn').classList.add('playing');
+            }).catch(error => {
+              console.error('Playback failed:', error);
+              alert('Audio playback failed. Please check your browser settings.');
+            });
+          }
+        }
+
+        function nextTrack() {
+          currentTrackIndex = (currentTrackIndex + 1) % musicTracks.length;
+          loadTrack(currentTrackIndex);
+          
+          // 如果正在播放，继续播放新曲目
+          if (isPlaying) {
+            currentAudio.play().then(() => {
+              document.getElementById('playPauseBtn').textContent = 'Pause';
+              document.getElementById('playPauseBtn').classList.add('playing');
+            }).catch(error => {
+              console.error('Playback failed:', error);
+              isPlaying = false;
+              document.getElementById('playPauseBtn').textContent = 'Play';
+              document.getElementById('playPauseBtn').classList.remove('playing');
+            });
+          }
+        }
+
+        function handleFileSelect(event) {
+          const files = event.target.files;
+          
+          for (let file of files) {
+            if (file.type.startsWith('audio/') || file.name.toLowerCase().endsWith('.mp3')) {
+              const url = URL.createObjectURL(file);
+              const name = file.name.replace(/\.[^/.]+$/, ""); // 移除文件扩展名
+              
+              musicTracks.push({
+                name: name,
+                url: url
+              });
+              
+              console.log(`Added track: ${name}`);
+            }
+          }
+          
+          // 更新当前曲目显示
+          if (musicTracks.length > 0) {
+            document.getElementById('currentTrack').textContent = musicTracks[currentTrackIndex].name;
+          }
+          
+          // 清空文件输入
+          event.target.value = '';
+        }
+
+        // 录屏计时器函数
+        function startRecordingTimer() {
+          recordingTimer = setInterval(() => {
+            const elapsed = Date.now() - videoRecordingStartTime;
+            const hours = Math.floor(elapsed / (1000 * 60 * 60));
+            const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
+            
+            const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('recordingTimeDisplay').textContent = timeString;
+          }, 1000);
+        }
+
+        function stopRecordingTimer() {
+          if (recordingTimer) {
+            clearInterval(recordingTimer);
+            recordingTimer = null;
+          }
+        }
+
+        // 历史记录管理函数
+        function addToHistory(type, url) {
+          const now = new Date();
+          const timeString = now.toLocaleTimeString();
+          const dateString = now.toLocaleDateString();
+          
+          const historyItem = {
+            id: Date.now(),
+            type: type,
+            url: url,
+            time: timeString,
+            date: dateString,
+            timestamp: now
+          };
+          
+          historyItems.unshift(historyItem); // 添加到开头
+          
+          // 限制历史记录数量
+          if (historyItems.length > 10) {
+            historyItems = historyItems.slice(0, 10);
+          }
+          
+          updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+          const historyList = document.getElementById('historyList');
+          historyList.innerHTML = '';
+          const historyPanel = document.querySelector('.history-panel');
+          if (historyItems.length === 0) {
+            historyPanel.style.display = 'none';
+          } else {
+            historyPanel.style.display = 'flex';
+          }
+          historyItems.forEach(item => {
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            // 缩略图部分
+            let thumb = '';
+            if (item.type === 'Screenshot') {
+              thumb = `<img src="${item.url}" class="history-thumb" />`;
+            } else if (item.type === 'Video Recording') {
+              thumb = `<video src="${item.url}" class="history-thumb" muted preload="metadata"></video>`;
+            }
+            historyItem.innerHTML = `
+              ${thumb}
+              <div class="history-item-title">${item.type}</div>
+              <div class="history-item-time">${item.date} ${item.time}</div>
+            `;
+            historyItem.addEventListener('click', () => {
+              // 点击历史记录项可以预览或下载
+              if (item.type === 'Screenshot') {
+                showHistoryPreview(item.url, 'Screenshot');
+              } else if (item.type === 'Video Recording') {
+                showHistoryPreview(item.url, 'Video');
+              }
+            });
+            historyList.appendChild(historyItem);
+          });
+        }
+
+        function showHistoryPreview(url, type) {
+          // 显示历史记录预览
+          const previewImg = document.getElementById('screenshotPreview');
+          const videoPreview = document.getElementById('videoPreview');
+          if (type === 'Screenshot') {
+            previewImg.src = url;
+            previewImg.style.display = 'block';
+            videoPreview.style.display = 'none';
+            videoPreview.src = '';
+            document.getElementById('modalTitle').textContent = 'History Screenshot';
+          } else if (type === 'Video') {
+            videoPreview.src = url;
+            videoPreview.style.display = 'block';
+            videoPreview.load();
+            previewImg.style.display = 'none';
+            previewImg.src = '';
+            document.getElementById('modalTitle').textContent = 'History Video';
+          }
+          document.getElementById('downloadModal').style.display = 'flex';
+        }
+
+        // 合成BGM与视频为mp4，带进度动画
+        async function mergeVideoWithBgm() {
+          // 检查FFmpeg是否挂载
+          if (!window.FFmpeg || !window.FFmpeg.createFFmpeg) {
+            alert('FFmpeg wasm 引擎未加载，可能是网络问题或CDN被墙。请检查 https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.min.js 是否能访问。');
+            return;
+          }
+          const createFFmpeg = window.FFmpeg.createFFmpeg;
+          const fetchFile = window.FFmpeg.fetchFile;
+          // 显示进度动画
+          const progressDiv = document.getElementById('ffmpegProgress');
+          const progressText = document.getElementById('ffmpegProgressText');
+          const mergeBtn = document.getElementById('mergeBgmBtn');
+          mergeBtn.disabled = true;
+          mergeBtn.textContent = '合成中...';
+          progressDiv.style.display = 'block';
+          progressText.textContent = '正在合成...';
+          let lastPercent = 0;
+          try {
+            // 进度回调
+            const ffmpeg = createFFmpeg({
+              log: true,
+              progress: ({ ratio }) => {
+                const percent = Math.round(ratio * 100);
+                if (percent !== lastPercent) {
+                  progressText.textContent = `正在合成... ${percent}%`;
+                  lastPercent = percent;
+                }
+                console.log('ffmpeg progress:', percent + '%');
+              }
+            });
+            if (!ffmpeg.isLoaded()) {
+              progressText.textContent = '正在加载合成引擎...';
+              console.log('Loading ffmpeg.wasm...');
+              await ffmpeg.load();
+              console.log('ffmpeg.wasm loaded');
+            }
+            // 获取当前录制视频和选中的BGM
+            const bgmIdx = document.getElementById('bgmSelect').value;
+            const bgmTrack = musicTracks[bgmIdx];
+            // 下载BGM为blob
+            progressText.textContent = '正在加载BGM...';
+            const bgmBlob = await fetch(bgmTrack.url).then(r => r.blob());
+            // 读取视频blob
+            progressText.textContent = '正在准备视频...';
+            const videoFile = new File([videoBlob], 'input.webm');
+            const audioFile = new File([bgmBlob], 'input.mp3');
+            // 写入虚拟文件系统
+            progressText.textContent = '正在写入文件...';
+            await ffmpeg.FS('writeFile', 'input.webm', await fetchFile(videoFile));
+            await ffmpeg.FS('writeFile', 'input.mp3', await fetchFile(audioFile));
+            // 合成命令：mp4格式，音视频长度以视频为准
+            progressText.textContent = '正在合成...';
+            await ffmpeg.run('-i', 'input.webm', '-i', 'input.mp3', '-c:v', 'copy', '-c:a', 'aac', '-shortest', 'output.mp4');
+            // 读取输出
+            progressText.textContent = '正在生成文件...';
+            const data = ffmpeg.FS('readFile', 'output.mp4');
+            const mergedBlob = new Blob([data.buffer], { type: 'video/mp4' });
+            // 生成可预览url
+            const mergedUrl = URL.createObjectURL(mergedBlob);
+            // 用合成后的视频替换预览
+            const videoPreview = document.getElementById('videoPreview');
+            videoPreview.src = mergedUrl;
+            videoPreview.load();
+            // 下载按钮下载合成后的视频
+            document.getElementById('downloadBtn').onclick = function() {
+              const link = document.createElement('a');
+              link.download = 'digital_creatures_with_bgm.mp4';
+              link.href = mergedUrl;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              closeModal();
+            };
+            // 合成完成后隐藏进度动画
+            progressDiv.style.display = 'none';
+            mergeBtn.disabled = false;
+            mergeBtn.textContent = '合成并试听';
+          } catch (err) {
+            progressDiv.style.display = 'none';
+            mergeBtn.disabled = false;
+            mergeBtn.textContent = '合成并试听';
+            alert('合成失败：' + (err.message || err));
+            console.error('ffmpeg合成失败', err);
+          }
+        }
+
+        // 绑定合成按钮事件
+        window.addEventListener('DOMContentLoaded', function() {
+          document.getElementById('mergeBgmBtn').onclick = mergeVideoWithBgm;
+        });
+
+        // 初始化录制BGM选择下拉框
+        function initializeRecordBgmSelect() {
+          const select = document.getElementById('recordBgmSelect');
+          select.innerHTML = '';
+          musicTracks.forEach((track, idx) => {
+            const opt = document.createElement('option');
+            opt.value = idx;
+            opt.textContent = track.name;
+            select.appendChild(opt);
+          });
+        }
+    </script>
+    <!-- 底部空格提示 -->
+    <div class="spacebar-hint">Press SPACE to randomize creatures, ocean depth, and activity</div>
+</body>
+</html> 
