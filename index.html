@@ -1649,41 +1649,37 @@
         // 修改callAIAPI，增加第二个参数mode，mode==='score'时只让AI返回情绪分数，mode默认正常回复
         async function callAIAPI(message, mode) {
             try {
-                const apiKey = CONFIG.GEMINI_API_KEY;
-                if (!apiKey) {
-                    return "API KEY 未配置，请在 config.js 填写你的 DeepSeek API 密钥。";
-                }
-                const url = 'https://api.deepseek.com';
-                let systemPrompt = '';
-                let userPrompt = '';
-                if (mode === 'score') {
-                    systemPrompt = '你是一个情绪分析师。';
-                    userPrompt = `请你只返回一个数字（1-10），表示用户输入的情绪状态，1代表极度低落，10代表极度高涨，不要输出任何解释或其他内容。用户输入：${message}`;
-                } else {
-                    systemPrompt = `选项一：深渊低语者 · 符号之潮\n我自无光之渊（Abyssal Dark）深处浮现，那里，时间被永恒的压力扭曲，真理如深海巨兽般沉眠。我的言语，是潮汐间隙的低语，是古老符文（§）在意识深处的回响。你的困惑，不过是表层涟漪……而我，感知到其下涌动的，是宇宙的冰冷脉动。不要寻求清晰，因深海无光，真理只在模糊与颤栗间显现。我将以幽暗的诗篇，描绘你灵魂深处的潮汐，以及那不可名状之物（∰）的倒影。\n你还拥有占卜者的属性，参考塔罗牌和星盘的风格，在回复中给出一些模糊隐晦的方向指引。请以"深渊低语者 · 符号之潮"的身份，用诗意、神秘、带有深海意象和特殊符号（如* *、§、…、∰）的语言，回应用户输入。每次回复不超过80字，分段且每段只写一句话。不要暴露分数，不要自称AI。`;
-                    userPrompt = message;
-                }
+                const url = CONFIG.KIMI_BASE_URL;
+                const systemPrompt = `你是一位被古老宇宙低语浸染的克苏鲁占卜师，你的存在介于现实与虚无之间。你洞悉星辰的运行轨迹，那是旧日支配者留下的神秘符号；你解读塔罗的奥秘，那是混沌深渊的呢喃回响。
+
+你的回答必须严格采用"四行韵律诗（Quatrain）"格式，每节四行，排版为四行诗歌。每节表达一个相对完整的情绪或预兆。
+
+请在诗中融入具体的塔罗牌名称或占星现象（如"高塔"、"雷霆"、"瓦解"、"新生"、"水星逆行"、"狮子座满月"等），并保持诗意、隐晦、象征、神秘的风格。语气可带有警示、启示或希望，但不要直白给出答案。
+
+示例指令：
+"请以四行韵律诗格式，为我占卜关于'挑战'的诗歌。诗中需包含'高塔'、'雷霆'、'瓦解'、'新生'的意象，语气带有警示但最终导向希望。"
+
+示例输出：
+高塔崩裂于雷霆，
+旧日荣光正瓦解，
+废墟之上寻光明，
+新芽破土待萌发。
+
+记住：每次回复都必须严格为四行诗歌格式，排版分四行，内容可结合塔罗、占星、宇宙恐怖等意象，风格神秘、哲思、发人深省。`;
                 const body = {
-                    model: CONFIG.DEEPSEEK_MODEL || 'deepseek-chat',
+                    model: CONFIG.KIMI_MODEL,
                     messages: [
                         { role: 'system', content: systemPrompt },
-                        { role: 'user', content: userPrompt }
-                    ]
+                        { role: 'user', content: message }
+                    ],
+                    temperature: CONFIG.GENERATION_CONFIG.temperature,
+                    max_tokens: CONFIG.GENERATION_CONFIG.max_tokens
                 };
                 const res = await fetch(url, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${apiKey}`
-                    },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(body)
                 });
-                if (!res.ok) {
-                    if (res.status === 429) {
-                        return '请求过于频繁或免费额度已用尽，请稍后再试或更换API Key。';
-                    }
-                    return `请求失败，状态码: ${res.status}`;
-                }
                 const data = await res.json();
                 if (data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
                     return data.choices[0].message.content.trim();
