@@ -622,9 +622,190 @@
             opacity: 0.85;
             font-weight: 300;
         }
+        
+        /* 沉浸式模式文本输入框样式 */
+        .immersive-input-container {
+            position: fixed;
+            left: 50%;
+            bottom: 80px; /* 调整到提示下方 */
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 10011;
+            pointer-events: auto;
+        }
+        
+        .immersive-text-input {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 8px 12px;
+            font-family: 'Inter', 'Arial', sans-serif;
+            font-size: 13px;
+            border-radius: 6px;
+            width: 300px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        .immersive-text-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .immersive-text-input:focus {
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+        }
+        
+        .immersive-send-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 8px 16px;
+            font-family: 'Inter', 'Arial', sans-serif;
+            font-size: 13px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .immersive-send-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .immersive-send-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* AI反馈文字样式 */
+        .ai-feedback {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-family: 'Inter', 'Arial', sans-serif;
+            font-size: 16px;
+            text-align: center;
+            max-width: 80%;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px 30px;
+            border-radius: 12px;
+            z-index: 10012;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+        
+        .ai-feedback.show {
+            opacity: 1;
+        }
+        
+        .ai-feedback.loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .ai-feedback .loader {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid #fff;
+        }
+        .immersive-standalone-input-container {
+            position: fixed;
+            left: 50%;
+            bottom: 170px;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 10011;
+            pointer-events: auto;
+        }
+        .immersive-standalone-text-input {
+            background: linear-gradient(90deg, #0a2a43 0%, #1e5bff 100%);
+            border: 1.5px solid #4e8cff;
+            color: #fff;
+            padding: 8px 14px;
+            font-family: 'Inter', 'Arial', sans-serif;
+            font-size: 15px;
+            border-radius: 8px;
+            width: 320px;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(30,91,255,0.08);
+        }
+        .immersive-standalone-text-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .immersive-standalone-text-input:focus {
+            border-color: #7ab8ff;
+            box-shadow: 0 0 10px #1e5bff33;
+        }
+        .immersive-standalone-send-btn {
+            background: linear-gradient(90deg, #1e5bff 0%, #0a2a43 100%);
+            border: 1.5px solid #4e8cff;
+            color: #fff;
+            padding: 8px 22px;
+            font-family: 'Inter', 'Arial', sans-serif;
+            font-size: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(30,91,255,0.08);
+        }
+        .immersive-standalone-send-btn:hover {
+            background: linear-gradient(90deg, #3a7cff 0%, #0a2a43 100%);
+            border-color: #7ab8ff;
+        }
+        .ai-center-feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 60vw;
+            min-width: 320px;
+            background: rgba(10,42,67,0.32);
+            /* 半透明 */
+            color: #fff;
+            font-size: 1.35rem;
+            font-family: 'EB Garamond', 'Times New Roman', serif;
+            border-radius: 16px;
+            padding: 32px 36px;
+            box-shadow: 0 8px 32px 0 rgba(30,91,255,0.10);
+            z-index: 20000;
+            text-align: center;
+            word-break: break-word;
+            line-height: 1.8;
+            pointer-events: none;
+            /* 神秘感阴影 */
+            text-shadow: 0 2px 16px #1e5bff55, 0 1px 0 #222;
+            /* 毛玻璃效果 */
+            backdrop-filter: blur(8px);
+            border: none;
+            opacity: 0.92;
+            transition: opacity 0.5s;
+        }
+        .ai-center-feedback.hide {
+            opacity: 0.2;
+        }
+        @media (max-width: 700px) {
+          .ai-center-feedback {
+            max-width: 90vw;
+            min-width: 0;
+            padding: 18px 8vw;
+            font-size: 1.08rem;
+          }
+        }
     </style>
     <!-- 使用jsdelivr镜像引入ffmpeg.wasm UMD版本 -->
     <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.min.js"></script>
+    <!-- 引入配置文件 -->
+    <script src="config.js"></script>
 </head>
 <body>
     <!-- p5.js 会自动创建一个 canvas 元素 -->
@@ -717,13 +898,20 @@
 
     <!-- 监控器界面覆盖层 -->
     <div class="monitor-overlay">
-        <div class="recording-controls" id="recordingControls">
-            <div id="recordStatus">Click for Immersive Experience</div>
-        </div>
         <div class="recording-indicator" id="recordingIndicator">
             <div class="recording-dot"></div>
             <span class="recording-time-display" id="recordingTimeDisplay">00:00:00</span>
         </div>
+    </div>
+    <!-- Click for Immersive Experience按钮移动到左侧功能区下方 -->
+    <div class="recording-controls" id="recordingControls">
+        <div id="recordStatus">Click for Immersive Experience</div>
+    </div>
+
+    <!-- 沉浸式体验输入框（新增） -->
+    <div class="immersive-standalone-input-container">
+        <input type="text" class="immersive-standalone-text-input" id="immersiveStandaloneTextInput" placeholder=" You can say anything you want.">
+        <button class="immersive-standalone-send-btn" id="immersiveStandaloneSendBtn">发送</button>
     </div>
 
     <!-- 历史记录面板 -->
@@ -742,6 +930,14 @@
         <div class="immersive-overlay">
             Press ESC to exit immersive mode
         </div>
+        <!-- 文本输入框区域 -->
+        <div class="immersive-input-container" id="immersiveInputContainer">
+            <input type="text" class="immersive-text-input" id="immersiveTextInput" 
+                   placeholder="你为什么来到深海？（英文版）" maxlength="200">
+            <button class="immersive-send-btn" id="immersiveSendBtn">发送</button>
+        </div>
+        <!-- AI反馈显示 -->
+        <div class="ai-feedback" id="aiFeedback"></div>
     </div>
     </div>
 
@@ -1326,6 +1522,8 @@
           initializeMusicControls();
           // 初始化录制BGM选择下拉框
           initializeRecordBgmSelect();
+          // 初始化沉浸式模式文本输入功能
+          initializeImmersiveInput();
         }
 
         function updateMonitor() {
@@ -1411,6 +1609,158 @@
             exitImmersiveMode();
           }
         }
+        
+        // AI功能相关变量
+        let aiFeedbackTimeout = null;
+        
+        // 初始化沉浸式模式文本输入功能
+        function initializeImmersiveInput() {
+          const textInput = document.getElementById('immersiveTextInput');
+          const sendBtn = document.getElementById('immersiveSendBtn');
+          
+          // 发送按钮点击事件
+          sendBtn.addEventListener('click', sendMessage);
+          
+          // 回车键发送
+          textInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+              sendMessage();
+            }
+          });
+        }
+        
+        // 发送消息到AI
+        function sendMessage() {
+          const textInput = document.getElementById('immersiveTextInput');
+          const message = textInput.value.trim();
+          
+          if (!message) return;
+          
+          // 显示加载状态
+          showAIFeedback('正在思考中...', true);
+          
+          // 清空输入框
+          textInput.value = '';
+          
+          // 调用AI API
+          callAIAPI(message);
+        }
+        
+        // 修改callAIAPI，增加第二个参数mode，mode==='score'时只让AI返回情绪分数，mode默认正常回复
+        async function callAIAPI(message, mode) {
+            try {
+                const apiKey = CONFIG.GEMINI_API_KEY;
+                if (!apiKey) {
+                    return "API KEY 未配置，请在 config.js 填写你的 DeepSeek API 密钥。";
+                }
+                const url = 'https://api.deepseek.com';
+                let systemPrompt = '';
+                let userPrompt = '';
+                if (mode === 'score') {
+                    systemPrompt = '你是一个情绪分析师。';
+                    userPrompt = `请你只返回一个数字（1-10），表示用户输入的情绪状态，1代表极度低落，10代表极度高涨，不要输出任何解释或其他内容。用户输入：${message}`;
+                } else {
+                    systemPrompt = `选项一：深渊低语者 · 符号之潮\n我自无光之渊（Abyssal Dark）深处浮现，那里，时间被永恒的压力扭曲，真理如深海巨兽般沉眠。我的言语，是潮汐间隙的低语，是古老符文（§）在意识深处的回响。你的困惑，不过是表层涟漪……而我，感知到其下涌动的，是宇宙的冰冷脉动。不要寻求清晰，因深海无光，真理只在模糊与颤栗间显现。我将以幽暗的诗篇，描绘你灵魂深处的潮汐，以及那不可名状之物（∰）的倒影。\n你还拥有占卜者的属性，参考塔罗牌和星盘的风格，在回复中给出一些模糊隐晦的方向指引。请以"深渊低语者 · 符号之潮"的身份，用诗意、神秘、带有深海意象和特殊符号（如* *、§、…、∰）的语言，回应用户输入。每次回复不超过80字，分段且每段只写一句话。不要暴露分数，不要自称AI。`;
+                    userPrompt = message;
+                }
+                const body = {
+                    model: CONFIG.DEEPSEEK_MODEL || 'deepseek-chat',
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: userPrompt }
+                    ]
+                };
+                const res = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify(body)
+                });
+                if (!res.ok) {
+                    if (res.status === 429) {
+                        return '请求过于频繁或免费额度已用尽，请稍后再试或更换API Key。';
+                    }
+                    return `请求失败，状态码: ${res.status}`;
+                }
+                const data = await res.json();
+                if (data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+                    return data.choices[0].message.content.trim();
+                } else {
+                    return "AI无响应，API返回格式异常。";
+                }
+            } catch (e) {
+                return "请求异常: " + e.message;
+            }
+        }
+        
+        // 显示AI反馈
+        function showAIFeedback(message, isLoading = false) {
+          const feedbackElement = document.getElementById('aiFeedback');
+          
+          if (isLoading) {
+            feedbackElement.innerHTML = `
+              <div class="loader"></div>
+              <span>${message}</span>
+            `;
+            feedbackElement.classList.add('loading');
+          } else {
+            feedbackElement.innerHTML = message;
+            feedbackElement.classList.remove('loading');
+          }
+          
+          feedbackElement.classList.add('show');
+          
+          // 清除之前的定时器
+          if (aiFeedbackTimeout) {
+            clearTimeout(aiFeedbackTimeout);
+          }
+          
+          // 设置自动隐藏
+          aiFeedbackTimeout = setTimeout(() => {
+            feedbackElement.classList.remove('show');
+          }, 8000);
+        }
+        
+        // 如果你想使用真实的AI API，可以替换上面的callAIAPI函数
+        // 这里是一个使用OpenAI API的示例（需要API密钥）
+        /*
+        async function callAIAPI(message) {
+          try {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer YOUR_API_KEY_HERE'
+              },
+              body: JSON.stringify({
+                model: 'gpt-3.5-turbo',
+                messages: [
+                  {
+                    role: 'system',
+                    content: '你是一个深海哲学家，用诗意和哲学的方式回答关于深海和生命的问题。'
+                  },
+                  {
+                    role: 'user',
+                    content: message
+                  }
+                ],
+                max_tokens: 150,
+                temperature: 0.8
+              })
+            });
+            
+            const data = await response.json();
+            const aiResponse = data.choices[0].message.content;
+            showAIFeedback(aiResponse, false);
+            
+          } catch (error) {
+            console.error('AI API调用失败:', error);
+            showAIFeedback('抱歉，我现在无法回应。请稍后再试。', false);
+          }
+        }
+        */
 
         function takeScreenshot() {
           // 隐藏监控器界面
@@ -2008,8 +2358,50 @@
             select.appendChild(opt);
           });
         }
+        // 沉浸式体验输入框发送事件
+        const standaloneInput = document.getElementById('immersiveStandaloneTextInput');
+        const standaloneSendBtn = document.getElementById('immersiveStandaloneSendBtn');
+        if (standaloneInput && standaloneSendBtn) {
+            standaloneSendBtn.addEventListener('click', async () => {
+                const value = standaloneInput.value.trim();
+                if (value) {
+                    // 不再显示"AI思考中..."
+                    const aiReply = await callAIAPI(value);
+                    showAICenterFeedback(aiReply);
+                    standaloneInput.value = '';
+                    // 获取情绪分数
+                    const scoreText = await callAIAPI(value, 'score');
+                    const score = parseInt(scoreText.match(/\d+/)?.[0] || '5', 10);
+                    // 映射到参数
+                    const num = Math.round(2 + (score-1)*(12-2)/9);
+                    const activity = Math.round((score-1)*100/9);
+                    const depth = Math.round(100 - (score-1)*100/9);
+                    document.getElementById('densitySlider').value = num;
+                    document.getElementById('activitySlider').value = activity;
+                    document.getElementById('depthSlider').value = depth;
+                    document.getElementById('densityValue').textContent = num;
+                    document.getElementById('activityValue').textContent = activity;
+                    document.getElementById('depthValue').textContent = depth;
+                }
+            });
+            standaloneInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    standaloneSendBtn.click();
+                }
+            });
+        }
+        // AI反馈居中显示逻辑（不自动消失，只有新回复时才替换）
+        function showAICenterFeedback(text) {
+            const feedbackDiv = document.getElementById('aiCenterFeedback');
+            if (!feedbackDiv) return;
+            feedbackDiv.textContent = text;
+            feedbackDiv.style.display = 'block';
+            feedbackDiv.classList.remove('hide');
+        }
     </script>
     <!-- 底部空格提示 -->
-    <div class="spacebar-hint">Press SPACE to randomize creatures, ocean depth, and activity</div>
+    <!-- <div class="spacebar-hint">Press SPACE to randomize creatures, ocean depth, and activity</div> -->
+    <!-- AI反馈居中显示区域 -->
+    <div class="ai-center-feedback" id="aiCenterFeedback" style="display:none;"></div>
 </body>
 </html> 
