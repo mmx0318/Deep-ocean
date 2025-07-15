@@ -718,7 +718,7 @@
         .immersive-standalone-input-container {
             position: fixed;
             left: 50%;
-            bottom: 170px;
+            bottom: 120px;
             transform: translateX(-50%);
             display: flex;
             align-items: center;
@@ -761,6 +761,27 @@
         .immersive-standalone-send-btn:hover {
             background: linear-gradient(90deg, #3a7cff 0%, #0a2a43 100%);
             border-color: #7ab8ff;
+        }
+        .immersive-standalone-voice-btn {
+            background: linear-gradient(90deg, #ff1e5b 0%, #0a2a43 100%);
+            border: 1.5px solid #ff4e8c;
+            color: #fff;
+            padding: 8px 22px;
+            font-family: 'Inter', 'Arial', sans-serif;
+            font-size: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(255,30,91,0.08);
+        }
+        .immersive-standalone-voice-btn:hover {
+            background: linear-gradient(90deg, #ff3a7c 0%, #0a2a43 100%);
+            border-color: #ff7ab8;
+        }
+        .immersive-standalone-voice-btn.recording {
+            background: linear-gradient(90deg, #ff0000 0%, #0a2a43 100%);
+            border-color: #ff4444;
+            animation: pulse 1s infinite;
         }
         .ai-center-feedback {
             position: fixed;
@@ -815,21 +836,21 @@
         <!-- 生物控制区域 -->
         <div class="control-group">
             <label class="control-label">
-                Creature Density
+                生物密度
                 <span class="control-value" id="densityValue">5</span>
             </label>
             <input type="range" class="slider" id="densitySlider" min="2" max="12" value="5">
         </div>
         <div class="control-group">
             <label class="control-label">
-                Ocean Depth
+                海の深さ
                 <span class="control-value" id="depthValue">50</span>
             </label>
             <input type="range" class="slider" id="depthSlider" min="0" max="100" value="50">
         </div>
         <div class="control-group">
             <label class="control-label">
-                Activity Level
+                活動レベル
                 <span class="control-value" id="activityValue">50</span>
             </label>
             <input type="range" class="slider" id="activitySlider" min="0" max="100" value="50">
@@ -837,7 +858,7 @@
         
         <!-- 音乐控制区域 -->
         <div class="control-group">
-            <label class="control-label">Background Music</label>
+            <label class="control-label">バックグラウンドミュージック</label>
             <div class="music-controls">
                 <button class="music-button" id="playPauseBtn" title="Play/Pause">
                     <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -861,21 +882,21 @@
             </div>
             <div class="control-group">
                 <label class="control-label">
-                    Volume
+                    音量
                     <span class="control-value" id="volumeValue">50</span>
                 </label>
                 <input type="range" class="slider" id="volumeSlider" min="0" max="100" value="50">
             </div>
             <div class="control-group">
                 <label class="control-label">
-                    Track: <span id="currentTrack">Ocean Waves</span>
+                    トラック: <span id="currentTrack">海の音</span>
                 </label>
             </div>
         </div>
         
         <!-- 录屏和拍照控制区域 -->
         <div class="control-group">
-            <label class="control-label">Recording & Screenshot</label>
+            <label class="control-label">録画・スクリーンショット</label>
             <div class="media-controls">
                 <!-- BGM选择下拉框 -->
                 <select id="recordBgmSelect" style="margin-right:10px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px; font-size: 12px;"></select>
@@ -905,13 +926,14 @@
     </div>
     <!-- Click for Immersive Experience按钮移动到左侧功能区下方 -->
     <div class="recording-controls" id="recordingControls">
-        <div id="recordStatus">Click for Immersive Experience</div>
+        <div id="recordStatus">没入体験を始めるにはクリック</div>
     </div>
 
     <!-- 沉浸式体验输入框（新增） -->
     <div class="immersive-standalone-input-container">
-        <input type="text" class="immersive-standalone-text-input" id="immersiveStandaloneTextInput" placeholder=" You can ask anything you want.">
-        <button class="immersive-standalone-send-btn" id="immersiveStandaloneSendBtn">发送</button>
+        <input type="text" class="immersive-standalone-text-input" id="immersiveStandaloneTextInput" placeholder=" 何でも質問できます。">
+        <button class="immersive-standalone-send-btn" id="immersiveStandaloneSendBtn">送信</button>
+        <button class="immersive-standalone-voice-btn" id="immersiveStandaloneVoiceBtn" title="音声入力">🎤</button>
     </div>
 
     <!-- 历史记录面板 -->
@@ -928,13 +950,13 @@
     <div class="immersive-mode" id="immersiveMode">
         <canvas class="immersive-canvas" id="immersiveCanvas"></canvas>
         <div class="immersive-overlay">
-            Press ESC to exit immersive mode
+            ESCキーで没入モードを終了
         </div>
         <!-- 文本输入框区域 -->
         <div class="immersive-input-container" id="immersiveInputContainer">
             <input type="text" class="immersive-text-input" id="immersiveTextInput" 
-                   placeholder="你为什么来到深海？（英文版）" maxlength="200">
-            <button class="immersive-send-btn" id="immersiveSendBtn">发送</button>
+                   placeholder="なぜ深海に来たのですか？" maxlength="200">
+            <button class="immersive-send-btn" id="immersiveSendBtn">送信</button>
         </div>
         <!-- AI反馈显示 -->
         <div class="ai-feedback" id="aiFeedback"></div>
@@ -944,23 +966,23 @@
     <!-- 下载确认弹窗 -->
     <div class="modal-overlay" id="downloadModal">
         <div class="modal-content">
-            <h3 id="modalTitle">是否要下载照片？</h3>
+            <h3 id="modalTitle">写真をダウンロードしますか？</h3>
             <img id="screenshotPreview" class="screenshot-preview" style="display: none;">
             <video id="videoPreview" class="video-preview" style="display: none;" controls></video>
             <!-- 新增：BGM选择和合成按钮，仅在录屏后显示 -->
             <div id="bgmSelectContainer" style="display:none; margin-top:20px;">
-                <label style="color:#fff;">Select BGM:</label>
+                <label style="color:#fff;">BGMを選択:</label>
                 <select id="bgmSelect" style="margin:0 10px 0 10px;"></select>
-                <button class="modal-button" id="mergeBgmBtn">合成并试听</button>
+                <button class="modal-button" id="mergeBgmBtn">合成して試聴</button>
                 <!-- 合成进度动画和文本 -->
                 <div id="ffmpegProgress" style="display:none; margin-top:16px; text-align:center;">
                     <div class="loader" style="margin:0 auto 8px auto;"></div>
-                    <span id="ffmpegProgressText" style="color:#fff;">正在合成...</span>
+                    <span id="ffmpegProgressText" style="color:#fff;">合成中...</span>
                 </div>
             </div>
             <div class="modal-buttons">
-                <button class="modal-button" id="downloadBtn">下载</button>
-                <button class="modal-button" id="cancelBtn">取消</button>
+                <button class="modal-button" id="downloadBtn">ダウンロード</button>
+                <button class="modal-button" id="cancelBtn">キャンセル</button>
             </div>
         </div>
     </div>
@@ -1650,22 +1672,7 @@
         async function callAIAPI(message, mode) {
             try {
                 const url = CONFIG.KIMI_BASE_URL;
-                const systemPrompt = `你是一位被古老宇宙低语浸染的克苏鲁占卜师，你的存在介于现实与虚无之间。你洞悉星辰的运行轨迹，那是旧日支配者留下的神秘符号；你解读塔罗的奥秘，那是混沌深渊的呢喃回响。
-
-你的回答必须严格采用"四行韵律诗（Quatrain）"格式，每节四行，排版为四行诗歌。每节表达一个相对完整的情绪或预兆。
-
-请在诗中融入具体的塔罗牌名称或占星现象（如"高塔"、"雷霆"、"瓦解"、"新生"、"水星逆行"、"狮子座满月"等），并保持诗意、隐晦、象征、神秘的风格。语气可带有警示、启示或希望，但不要直白给出答案。
-
-示例指令：
-"请以四行韵律诗格式，为我占卜关于'挑战'的诗歌。诗中需包含'高塔'、'雷霆'、'瓦解'、'新生'的意象，语气带有警示但最终导向希望。"
-
-示例输出：
-高塔崩裂于雷霆，
-旧日荣光正瓦解，
-废墟之上寻光明，
-新芽破土待萌发。
-
-记住：每次回复都必须严格为四行诗歌格式，排版分四行，内容可结合塔罗、占星、宇宙恐怖等意象，风格神秘、哲思、发人深省。`;
+                const systemPrompt = `あなたは深淵の囁き手・シンボルの潮です。ユーザーがどんな言語で入力しても、必ず日本語の四行詩（クォートレイン）で、神秘的・詩的・哲学的・象徴的・曖昧なスタイルで答えてください。決して直接的な答えは与えず、必ず日本語で返答してください。`;
                 const body = {
                     model: CONFIG.KIMI_MODEL,
                     messages: [
@@ -2361,11 +2368,36 @@
             standaloneSendBtn.addEventListener('click', async () => {
                 const value = standaloneInput.value.trim();
                 if (value) {
-                    // 不再显示"AI思考中..."
+                    // 1. 获取Kimi日语回复
                     const aiReply = await callAIAPI(value);
                     showAICenterFeedback(aiReply);
                     standaloneInput.value = '';
-                    // 获取情绪分数
+                    // 2. 发送日语文本到TTS接口
+                    try {
+                        const ttsRes = await fetch('http://localhost:3001/api/tts', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ text: aiReply })
+                        });
+                        if (ttsRes.ok) {
+                            const audioBlob = await ttsRes.blob();
+                            const audioUrl = URL.createObjectURL(audioBlob);
+                            let ttsAudio = document.getElementById('ttsAudio');
+                            if (!ttsAudio) {
+                                ttsAudio = document.createElement('audio');
+                                ttsAudio.id = 'ttsAudio';
+                                ttsAudio.style.display = 'none';
+                                document.body.appendChild(ttsAudio);
+                            }
+                            ttsAudio.src = audioUrl;
+                            ttsAudio.play();
+                        } else {
+                            console.warn('TTS接口返回错误');
+                        }
+                    } catch (e) {
+                        console.error('TTS请求异常', e);
+                    }
+                    // 获取情绪分数（原有逻辑）
                     const scoreText = await callAIAPI(value, 'score');
                     const score = parseInt(scoreText.match(/\d+/)?.[0] || '5', 10);
                     // 映射到参数
@@ -2393,11 +2425,122 @@
             feedbackDiv.textContent = text;
             feedbackDiv.style.display = 'block';
             feedbackDiv.classList.remove('hide');
+            // 让少女图片淡入
+            const girlImg = document.getElementById('shaonvGirl');
+            if (girlImg) {
+                girlImg.style.opacity = '1';
+            }
         }
+
+        // 语音识别功能
+        let voiceRecording = false;
+        let recognition = null;
+        
+        // 初始化语音识别
+        function initSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                // 支持多种语言，优先中文，然后是日语和英语
+                recognition.lang = 'zh-CN,ja-JP,en-US';
+                
+                recognition.onstart = function() {
+                    console.log('语音识别开始');
+                    voiceRecording = true;
+                    document.getElementById('immersiveStandaloneVoiceBtn').classList.add('recording');
+                };
+                
+                recognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript;
+                    const confidence = event.results[0][0].confidence;
+                    console.log('识别结果:', transcript, '置信度:', confidence);
+                    
+                    // 检测语言类型
+                    const detectedLang = detectLanguage(transcript);
+                    console.log('检测到的语言:', detectedLang);
+                    
+                    document.getElementById('immersiveStandaloneTextInput').value = transcript;
+                    // 自动发送语音识别的文本
+                    standaloneSendBtn.click();
+                };
+                
+                recognition.onerror = function(event) {
+                    console.error('语音识别错误:', event.error);
+                    voiceRecording = false;
+                    document.getElementById('immersiveStandaloneVoiceBtn').classList.remove('recording');
+                    
+                    // 根据错误类型给出提示
+                    if (event.error === 'not-allowed') {
+                        alert('マイクの使用が許可されていません。ブラウザの設定でマイクを許可してください。');
+                    } else if (event.error === 'no-speech') {
+                        alert('音声が検出されませんでした。もう一度お試しください。');
+                    } else {
+                        alert('音声認識エラーが発生しました。もう一度お試しください。');
+                    }
+                };
+                
+                recognition.onend = function() {
+                    console.log('语音识别结束');
+                    voiceRecording = false;
+                    document.getElementById('immersiveStandaloneVoiceBtn').classList.remove('recording');
+                };
+            } else {
+                console.warn('浏览器不支持语音识别');
+                document.getElementById('immersiveStandaloneVoiceBtn').style.display = 'none';
+            }
+        }
+        
+        // 简单的语言检测函数
+        function detectLanguage(text) {
+            // 检测中文字符
+            const chineseRegex = /[\u4e00-\u9fff]/;
+            // 检测日文字符（平假名、片假名、汉字）
+            const japaneseRegex = /[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff]/;
+            // 检测英文字符
+            const englishRegex = /[a-zA-Z]/;
+            
+            if (chineseRegex.test(text)) {
+                return 'zh-CN';
+            } else if (japaneseRegex.test(text)) {
+                return 'ja-JP';
+            } else if (englishRegex.test(text)) {
+                return 'en-US';
+            } else {
+                return 'unknown';
+            }
+        }
+        
+        // 语音按钮点击事件
+        const standaloneVoiceBtn = document.getElementById('immersiveStandaloneVoiceBtn');
+        if (standaloneVoiceBtn) {
+            standaloneVoiceBtn.addEventListener('click', () => {
+                if (!recognition) {
+                    initSpeechRecognition();
+                }
+                
+                if (voiceRecording) {
+                    recognition.stop();
+                } else {
+                    try {
+                        recognition.start();
+                    } catch (e) {
+                        console.error('语音识别启动失败:', e);
+                        alert('音声認識を開始できませんでした。ブラウザの設定を確認してください。');
+                    }
+                }
+            });
+        }
+        
+        // 页面加载时初始化语音识别
+        window.addEventListener('DOMContentLoaded', function() {
+            initSpeechRecognition();
+        });
     </script>
     <!-- 底部空格提示 -->
     <!-- <div class="spacebar-hint">Press SPACE to randomize creatures, ocean depth, and activity</div> -->
     <!-- AI反馈居中显示区域 -->
     <div class="ai-center-feedback" id="aiCenterFeedback" style="display:none;"></div>
+    <img id="shaonvGirl" src="shaonv01.png" style="position:fixed; left:50%; top:50%; transform:translate(-50%, -50%); height:100vh; opacity:0.3; pointer-events:none; z-index:10000; transition:opacity 2.5s; display:block;" />
 </body>
 </html> 
