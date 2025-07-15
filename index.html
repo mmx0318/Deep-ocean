@@ -2728,7 +2728,7 @@
                             japaneseText = aiReply.split('---')[0].trim();
                         }
                         
-                        const ttsRes = await fetch('https://yourdomain.com/api/tts', {
+                        const ttsRes = await fetch('https://localhost:3001/api/tts', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ text: japaneseText })

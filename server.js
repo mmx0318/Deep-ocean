@@ -6,14 +6,30 @@ const fetch = require('node-fetch');
 const cors = require('cors');
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+
+// 更详细的 CORS 配置
+app.use(cors({
+  origin: ['https://localhost:3001', 'http://localhost:3001', 'http://localhost:8000','https://mmx0318.github.io'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// 添加请求日志中间件
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
 
 // 你的 Kimi API Key
 const API_KEY = 'sk-WeOtE2xqyuhIu5RvcxfGxHEKSCSvKbp1vSfsITgVYnr9Vy0s';
 
 // Moonshot Kimi 代理
 app.post('/api/kimi', async (req, res) => {
+  console.log('收到 /api/kimi 请求');
   try {
     const response = await fetch('https://api.moonshot.cn/v1/chat/completions', {
       method: 'POST',
@@ -23,10 +39,27 @@ app.post('/api/kimi', async (req, res) => {
       },
       body: JSON.stringify(req.body)
     });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Moonshot API 错误:', response.status, errorText);
+      return res.status(response.status).json({ 
+        error: 'Moonshot API 错误', 
+        status: response.status,
+        detail: errorText 
+      });
+    }
+    
     const data = await response.json();
+    console.log('Moonshot API 响应成功');
     res.status(response.status).json(data);
   } catch (err) {
-    res.status(500).json({ error: '代理服务器异常', detail: err.message });
+    console.error('代理服务器异常:', err.message);
+    res.status(500).json({ 
+      error: '代理服务器异常', 
+      detail: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 });
 
