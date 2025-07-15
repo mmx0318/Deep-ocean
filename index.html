@@ -18,10 +18,46 @@
         }
         canvas {
             display: block; /* 移除画布下方的额外空间 */
-            width: 100vw !important;
-            height: 100vh !important;
-            max-width: 100vw;
-            max-height: 100vh;
+        }
+        
+        @media (max-width: 900px) {
+            canvas {
+                width: 100vw !important;
+                height: 100vh !important;
+                position: fixed !important;
+                left: 0 !important;
+                top: 0 !important;
+                transform: none !important;
+                margin: 0 !important;
+                touch-action: pan-x !important;
+                overflow: hidden !important;
+            }
+            
+            /* 防止页面滚动 */
+            body {
+                overflow: hidden !important;
+                position: fixed !important;
+                width: 100% !important;
+                height: 100% !important;
+            }
+            
+            /* 移动端logo适配 */
+            #logo {
+                max-width: 80px !important;
+                max-height: 40px !important;
+                left: 15px !important;
+                top: 15px !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            /* 小屏手机logo进一步优化 */
+            #logo {
+                max-width: 60px !important;
+                max-height: 30px !important;
+                left: 10px !important;
+                top: 10px !important;
+            }
         }
         @media (max-width: 900px) {
             .control-panel, .history-panel {
@@ -59,6 +95,81 @@
                 bottom: 60px !important;
                 font-size: 12px !important;
                 padding: 5px 10px !important;
+            }
+            /* 移动端隐藏左侧工具栏 */
+            .control-panel {
+                display: none !important;
+            }
+            /* 移动端隐藏沉浸式体验按钮 */
+            .recording-controls {
+                display: none !important;
+            }
+            /* 移动端隐藏文本输入框，只显示语音按钮 */
+            .immersive-standalone-text-input {
+                display: none !important;
+            }
+            .immersive-standalone-send-btn {
+                display: none !important;
+            }
+            /* 移动端语音按钮居中显示 */
+            .immersive-standalone-input-container {
+                bottom: 50px !important;
+                width: auto !important;
+                max-width: none !important;
+                justify-content: center !important;
+            }
+            .immersive-standalone-voice-btn {
+                padding: 15px 20px !important;
+                font-size: 16px !important;
+                min-width: 80px !important;
+                border-radius: 50% !important;
+                width: 80px !important;
+                height: 80px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            /* 移动端AI反馈文字适配 - 已移至新的对话框样式 */
+            /* 移动端少女图片适配 */
+            #shaonvGirl {
+                height: 100vh !important;
+                width: 100vw !important;
+                object-fit: contain !important;
+                opacity: 0.2 !important;
+                left: 50% !important;
+                top: 50% !important;
+                transform: translate(-50%, -50%) !important;
+            }
+        }
+        @media (max-width: 480px) {
+            /* 小屏手机进一步优化 */
+            .immersive-standalone-input-container {
+                bottom: 40px !important;
+                width: auto !important;
+            }
+            .immersive-standalone-text-input {
+                display: none !important;
+            }
+            .immersive-standalone-send-btn {
+                display: none !important;
+            }
+            .immersive-standalone-voice-btn {
+                padding: 12px 16px !important;
+                font-size: 14px !important;
+                min-width: 70px !important;
+                border-radius: 50% !important;
+                width: 70px !important;
+                height: 70px !important;
+            }
+            /* 小屏手机AI反馈文字适配 - 已移至新的对话框样式 */
+            #shaonvGirl {
+                height: 100vh !important;
+                width: 100vw !important;
+                object-fit: contain !important;
+                opacity: 0.15 !important;
+                left: 50% !important;
+                top: 50% !important;
+                transform: translate(-50%, -50%) !important;
             }
         }
         
@@ -783,6 +894,38 @@
             border-color: #ff4444;
             animation: pulse 1s infinite;
         }
+        /* 弥散光效果 */
+        .immersive-standalone-voice-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        .immersive-standalone-voice-btn:hover::before {
+            opacity: 1;
+        }
+        .immersive-standalone-voice-btn.recording::before {
+            opacity: 1;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        @keyframes glow {
+            from {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.3;
+            }
+            to {
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0.8;
+            }
+        }
         .ai-center-feedback {
             position: fixed;
             top: 50%;
@@ -821,6 +964,34 @@
             padding: 18px 8vw;
             font-size: 1.08rem;
           }
+        }
+        /* 移动端对话框样式 */
+        @media (max-width: 900px) {
+            .ai-center-feedback {
+                position: fixed !important;
+                bottom: 140px !important;
+                top: auto !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                max-width: 90vw !important;
+                min-width: 0 !important;
+                padding: 16px 20px !important;
+                font-size: 0.95rem !important;
+                width: 85vw !important;
+                border-radius: 20px !important;
+                background: rgba(10,42,67,0.6) !important;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+                line-height: 1.6 !important;
+                border: 1px solid rgba(255,255,255,0.3) !important;
+            }
+        }
+        @media (max-width: 480px) {
+            .ai-center-feedback {
+                bottom: 120px !important;
+                width: 88vw !important;
+                font-size: 0.9rem !important;
+                padding: 14px 16px !important;
+            }
         }
     </style>
     <!-- 使用jsdelivr镜像引入ffmpeg.wasm UMD版本 -->
@@ -933,7 +1104,7 @@
     <div class="immersive-standalone-input-container">
         <input type="text" class="immersive-standalone-text-input" id="immersiveStandaloneTextInput" placeholder=" 何でも質問できます。">
         <button class="immersive-standalone-send-btn" id="immersiveStandaloneSendBtn">送信</button>
-        <button class="immersive-standalone-voice-btn" id="immersiveStandaloneVoiceBtn" title="音声入力">🎤</button>
+        <button class="immersive-standalone-voice-btn" id="immersiveStandaloneVoiceBtn" title="音声入力">●</button>
     </div>
 
     <!-- 历史记录面板 -->
@@ -1401,8 +1572,29 @@
 
         // setup() function, runs once when the p5.js program starts
         function setup() {
-          W = 1920; // Set canvas width to 1920 pixels
-          H = 1080; // Set canvas height to 1080 pixels
+          // 根据设备类型设置初始尺寸
+          if (window.innerWidth <= 900) {
+            // 移动端：使用更大的尺寸以支持横向滚动
+            const mobileAspectRatio = 16/9;
+            const screenHeight = window.innerHeight;
+            const screenWidth = window.innerWidth;
+            
+            let canvasHeight = screenHeight;
+            let canvasWidth = screenHeight * mobileAspectRatio;
+            
+            if (canvasWidth < screenWidth) {
+              canvasWidth = screenWidth;
+              canvasHeight = screenWidth / mobileAspectRatio;
+            }
+            
+            W = canvasWidth;
+            H = canvasHeight;
+          } else {
+            // 桌面端：使用默认尺寸
+            W = 1920;
+            H = 1080;
+          }
+          
           BASE_SCALE = 4; // Base scaling factor
           let cnv = createCanvas(W, H); // Create the canvas
           cnv.id('mainCanvas'); // 给主canvas加id
@@ -1410,6 +1602,86 @@
           colorMode(HSB, 360, 100, 100, 1);
           resetCreatures();
           initializeMonitor();
+          
+          // 移动端初始化触摸滑动
+          if (window.innerWidth <= 900) {
+            initMobileTouchScroll();
+          }
+        }
+        
+        // 移动端canvas适配函数
+        function adjustCanvasForMobile() {
+          // 移动端使用更大的canvas尺寸，允许横向滚动
+          const mobileAspectRatio = 16/9;
+          const screenHeight = window.innerHeight;
+          const screenWidth = window.innerWidth;
+          
+          // 计算canvas尺寸：高度铺满屏幕，宽度按比例计算
+          let canvasHeight = screenHeight;
+          let canvasWidth = screenHeight * mobileAspectRatio;
+          
+          // 如果计算出的宽度小于屏幕宽度，则按屏幕宽度计算
+          if (canvasWidth < screenWidth) {
+            canvasWidth = screenWidth;
+            canvasHeight = screenWidth / mobileAspectRatio;
+          }
+          
+          // 调整canvas的实际尺寸
+          resizeCanvas(canvasWidth, canvasHeight);
+          W = canvasWidth;
+          H = canvasHeight;
+          
+          // 初始化触摸滑动
+          initMobileTouchScroll();
+        }
+        
+        // 移动端触摸滑动变量
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let canvasOffsetX = 0;
+        let isDragging = false;
+        
+        // 初始化移动端触摸滑动
+        function initMobileTouchScroll() {
+          const canvas = document.getElementById('mainCanvas');
+          if (!canvas) return;
+          
+          // 触摸开始
+          canvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            touchStartX = touch.clientX - canvasOffsetX;
+            touchStartY = touch.clientY;
+            isDragging = true;
+          });
+          
+          // 触摸移动
+          canvas.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            if (!isDragging) return;
+            
+            const touch = e.touches[0];
+            const newOffsetX = touch.clientX - touchStartX;
+            
+            // 限制滑动范围
+            const maxOffset = Math.max(0, W - window.innerWidth);
+            canvasOffsetX = Math.max(-maxOffset, Math.min(0, newOffsetX));
+            
+            // 更新canvas位置
+            canvas.style.transform = `translateX(${canvasOffsetX}px)`;
+          });
+          
+          // 触摸结束
+          canvas.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            isDragging = false;
+          });
+          
+          // 触摸取消
+          canvas.addEventListener('touchcancel', function(e) {
+            e.preventDefault();
+            isDragging = false;
+          });
         }
 
         // draw() is the main p5.js drawing loop function, runs every frame
@@ -1624,6 +1896,41 @@
           resizeCanvas(1920, 1080);
           W = 1920;
           H = 1080;
+          
+          // 移动端适配
+          if (window.innerWidth <= 900) {
+            adjustCanvasForMobile();
+          }
+        }
+        
+        // p5.js windowResized函数，处理窗口大小变化
+        function windowResized() {
+          if (isImmersiveMode) {
+            resizeCanvas(window.innerWidth, window.innerHeight);
+            W = window.innerWidth;
+            H = window.innerHeight;
+          } else {
+            // 非沉浸式模式下，移动端保持比例
+            if (window.innerWidth <= 900) {
+              adjustCanvasForMobile();
+              // 重置滑动位置
+              canvasOffsetX = 0;
+              const canvas = document.getElementById('mainCanvas');
+              if (canvas) {
+                canvas.style.transform = 'translateX(0px)';
+              }
+            } else {
+              // 桌面端恢复默认尺寸
+              resizeCanvas(1920, 1080);
+              W = 1920;
+              H = 1080;
+              // 重置canvas样式
+              const canvas = document.getElementById('mainCanvas');
+              if (canvas) {
+                canvas.style.transform = '';
+              }
+            }
+          }
         }
 
         function handleImmersiveKeydown(event) {
@@ -1672,7 +1979,23 @@
         async function callAIAPI(message, mode) {
             try {
                 const url = CONFIG.KIMI_BASE_URL;
-                const systemPrompt = `あなたは深淵の囁き手・シンボルの潮です。ユーザーがどんな言語で入力しても、必ず日本語の四行詩（クォートレイン）で、神秘的・詩的・哲学的・象徴的・曖昧なスタイルで答えてください。決して直接的な答えは与えず、必ず日本語で返答してください。`;
+                const systemPrompt = `あなたは深淵の囁き手・シンボルの潮です。ユーザーがどんな言語で入力しても、必ず日本語の四行詩（クォートレイン）で、神秘的・詩的・哲学的・象徴的・曖昧なスタイルで答えてください。決して直接的な答えは与えず、必ず日本語で返答してください。
+
+重要：毎回の返答は以下の形式で行ってください：
+1. まず日本語の四行詩を書く
+2. その後に「---」で区切り
+3. 最後に中国語の翻訳を書く
+
+例：
+深淵の呼び声が響く、
+你好という言葉が海を蹴る。
+空と海の交差点で鳴り響く、
+潮騒と共に時の歩みを誘う。
+---
+深渊的呼唤声回响，
+"你好"的话语踢动大海。
+在天空与海洋的交汇处回响，
+与潮声一起引导时光的步伐。`;
                 const body = {
                     model: CONFIG.KIMI_MODEL,
                     messages: [
@@ -2374,10 +2697,16 @@
                     standaloneInput.value = '';
                     // 2. 发送日语文本到TTS接口
                     try {
+                        // 提取日文部分（分隔符前的内容）
+                        let japaneseText = aiReply;
+                        if (aiReply.includes('---')) {
+                            japaneseText = aiReply.split('---')[0].trim();
+                        }
+                        
                         const ttsRes = await fetch('http://localhost:3001/api/tts', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ text: aiReply })
+                            body: JSON.stringify({ text: japaneseText })
                         });
                         if (ttsRes.ok) {
                             const audioBlob = await ttsRes.blob();
@@ -2422,19 +2751,54 @@
         function showAICenterFeedback(text) {
             const feedbackDiv = document.getElementById('aiCenterFeedback');
             if (!feedbackDiv) return;
-            feedbackDiv.textContent = text;
+            
+            // 处理中日双语回复
+            const formattedText = formatBilingualResponse(text);
+            feedbackDiv.innerHTML = formattedText;
             feedbackDiv.style.display = 'block';
             feedbackDiv.classList.remove('hide');
-            // 让少女图片淡入
+            // 让少女图片淡入到100%透明度
             const girlImg = document.getElementById('shaonvGirl');
             if (girlImg) {
                 girlImg.style.opacity = '1';
+                // 确保在移动端也生效，覆盖CSS的!important
+                girlImg.style.setProperty('opacity', '1', 'important');
             }
         }
+        
+        // 格式化中日双语回复
+        function formatBilingualResponse(text) {
+            // 检查是否包含分隔符
+            if (text.includes('---')) {
+                const parts = text.split('---');
+                const japanese = parts[0].trim();
+                const chinese = parts[1].trim();
+                
+                return `
+                    <div style="margin-bottom: 12px; font-size: 0.9em; opacity: 0.8; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 8px;">
+                        ${japanese}
+                    </div>
+                    <div style="font-size: 1.1em; color: #fff;">
+                        ${chinese}
+                    </div>
+                `;
+            } else {
+                // 如果没有分隔符，只显示原文
+                return `
+                    <div style="font-size: 1.1em; color: #fff;">
+                        ${text}
+                    </div>
+                `;
+            }
+        }
+        
+        // 删除旧的翻译函数
+        // function addChineseTranslation(japaneseText) { ... }
 
         // 语音识别功能
         let voiceRecording = false;
         let recognition = null;
+        let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
         // 初始化语音识别
         function initSpeechRecognition() {
@@ -2511,36 +2875,107 @@
             }
         }
         
-        // 语音按钮点击事件
+        // 语音按钮事件处理
         const standaloneVoiceBtn = document.getElementById('immersiveStandaloneVoiceBtn');
         if (standaloneVoiceBtn) {
-            standaloneVoiceBtn.addEventListener('click', () => {
-                if (!recognition) {
-                    initSpeechRecognition();
-                }
+            if (isMobile) {
+                // 移动端：长按录音
+                let pressTimer = null;
                 
-                if (voiceRecording) {
-                    recognition.stop();
-                } else {
-                    try {
-                        recognition.start();
-                    } catch (e) {
-                        console.error('语音识别启动失败:', e);
-                        alert('音声認識を開始できませんでした。ブラウザの設定を確認してください。');
+                standaloneVoiceBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    pressTimer = setTimeout(() => {
+                        if (!recognition) {
+                            initSpeechRecognition();
+                        }
+                        try {
+                            recognition.start();
+                        } catch (e) {
+                            console.error('语音识别启动失败:', e);
+                            alert('音声認識を開始できませんでした。ブラウザの設定を確認してください。');
+                        }
+                    }, 500); // 长按500ms后开始录音
+                });
+                
+                standaloneVoiceBtn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    if (pressTimer) {
+                        clearTimeout(pressTimer);
+                        pressTimer = null;
                     }
-                }
-            });
+                    if (voiceRecording && recognition) {
+                        recognition.stop();
+                    }
+                });
+                
+                standaloneVoiceBtn.addEventListener('touchcancel', (e) => {
+                    e.preventDefault();
+                    if (pressTimer) {
+                        clearTimeout(pressTimer);
+                        pressTimer = null;
+                    }
+                    if (voiceRecording && recognition) {
+                        recognition.stop();
+                    }
+                });
+            } else {
+                // 桌面端：点击录音
+                standaloneVoiceBtn.addEventListener('click', () => {
+                    if (!recognition) {
+                        initSpeechRecognition();
+                    }
+                    
+                    if (voiceRecording) {
+                        recognition.stop();
+                    } else {
+                        try {
+                            recognition.start();
+                        } catch (e) {
+                            console.error('语音识别启动失败:', e);
+                            alert('音声認識を開始できませんでした。ブラウザの設定を確認してください。');
+                        }
+                    }
+                });
+            }
         }
         
         // 页面加载时初始化语音识别
         window.addEventListener('DOMContentLoaded', function() {
             initSpeechRecognition();
+            
+            // 初始化logo交互效果
+            initLogoInteraction();
         });
+        
+        // 初始化logo交互效果
+        function initLogoInteraction() {
+            const logo = document.getElementById('logo');
+            if (logo) {
+                // 鼠标悬停效果
+                logo.addEventListener('mouseenter', function() {
+                    this.style.opacity = '1';
+                });
+                
+                logo.addEventListener('mouseleave', function() {
+                    this.style.opacity = '0.8';
+                });
+                
+                // 点击效果 - 跳转到KusaPics
+                logo.addEventListener('click', function() {
+                    window.open('https://kusa.pics/', '_blank');
+                });
+                
+                // 添加鼠标指针样式
+                logo.style.cursor = 'pointer';
+            }
+        }
     </script>
     <!-- 底部空格提示 -->
     <!-- <div class="spacebar-hint">Press SPACE to randomize creatures, ocean depth, and activity</div> -->
     <!-- AI反馈居中显示区域 -->
     <div class="ai-center-feedback" id="aiCenterFeedback" style="display:none;"></div>
     <img id="shaonvGirl" src="shaonv01.png" style="position:fixed; left:50%; top:50%; transform:translate(-50%, -50%); height:100vh; opacity:0.3; pointer-events:none; z-index:10000; transition:opacity 2.5s; display:block;" />
+    <!-- Logo -->
+    <img id="logo" src="logo.png" style="position:fixed; left:20px; top:20px; z-index:10001; max-width:120px; max-height:60px; opacity:0.8; transition:opacity 0.3s ease;" />
 </body>
 </html> 
