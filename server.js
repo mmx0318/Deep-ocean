@@ -1,5 +1,7 @@
 const express = require('express');
-
+const https = require('https');
+const fs = require('fs');
+const path = require('path');
 const fetch = require('node-fetch');
 const cors = require('cors');
 
@@ -39,10 +41,13 @@ app.post('/api/tts', async (req, res) => {
     model_id: "eleven_multilingual_v2"
   };
   try {
-    const ttsRes = await fetch('http://localhost:3001/api/tts', {
+    const ttsRes = await fetch(ttsUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: aiReply })
+      headers: { 
+        'Content-Type': 'application/json',
+        'xi-api-key': ELEVENLABS_API_KEY
+      },
+      body: JSON.stringify(ttsBody)
     });
     if (!ttsRes.ok) {
       const err = await ttsRes.text();
@@ -55,8 +60,33 @@ app.post('/api/tts', async (req, res) => {
   }
 });
 
+// 静态文件服务
+app.use(express.static('.'));
+
 const PORT = 3001;
-app.listen(PORT, () => {
-  console.log(`Kimi 代理服务已启动，端口: ${PORT}`);
-});
+
+// 检查是否存在SSL证书
+const sslDir = path.join(__dirname, 'ssl');
+const certPath = path.join(sslDir, 'fullchain.pem');
+const keyPath = path.join(sslDir, 'privkey.pem');
+
+if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+  // 使用HTTPS
+  const options = {
+    key: fs.readFileSync(keyPath),
+    cert: fs.readFileSync(certPath)
+  };
+  
+  https.createServer(options, app).listen(PORT, () => {
+    console.log(`HTTPS 服务器已启动，端口: ${PORT}`);
+    console.log(`访问地址: https://localhost:${PORT}`);
+  });
+} else {
+  // 使用HTTP（开发模式）
+  app.listen(PORT, () => {
+    console.log(`HTTP 服务器已启动，端口: ${PORT}`);
+    console.log(`访问地址: http://localhost:${PORT}`);
+    console.log('提示: 要启用HTTPS，请运行 npm run generate-cert');
+  });
+}
 
