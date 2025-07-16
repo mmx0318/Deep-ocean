@@ -146,6 +146,16 @@
                 top: 50% !important;
                 transform: translate(-50%, -50%) !important;
             }
+            /* 移动端move视频适配 */
+            #moveVideo {
+                height: 100vh !important;
+                width: 100vw !important;
+                object-fit: contain !important;
+                opacity: 0.2 !important;
+                left: 50% !important;
+                top: 50% !important;
+                transform: translate(-50%, -50%) !important;
+            }
         }
         @media (max-width: 480px) {
             /* 小屏手机进一步优化 */
@@ -175,6 +185,16 @@
             }
             /* 小屏手机AI反馈文字适配 - 已移至新的对话框样式 */
             #shaonvGirl {
+                height: 100vh !important;
+                width: 100vw !important;
+                object-fit: contain !important;
+                opacity: 0.15 !important;
+                left: 50% !important;
+                top: 50% !important;
+                transform: translate(-50%, -50%) !important;
+            }
+            /* 小屏手机move视频适配 */
+            #moveVideo {
                 height: 100vh !important;
                 width: 100vw !important;
                 object-fit: contain !important;
@@ -2729,7 +2749,7 @@
                         }
                         
                         const ttsRes = await fetch(window.location.hostname === 'localhost' 
-                            ? 'https://localhost:3001/api/tts'
+                            ? 'http://localhost:3001/api/tts'
                             : window.location.origin + '/api/tts', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -2745,8 +2765,66 @@
                                 ttsAudio.style.display = 'none';
                                 document.body.appendChild(ttsAudio);
                             }
+                            
+                            // 播放TTS音频时显示move视频
+                            const girlImg = document.getElementById('shaonvGirl');
+                            const moveVideo = document.getElementById('moveVideo');
+                            
+                            // 淡出图片，淡入视频 - 更自然的过渡
+                            if (girlImg) {
+                                girlImg.style.opacity = '0';
+                                girlImg.style.setProperty('opacity', '0', 'important');
+                            }
+                            if (moveVideo) {
+                                // 先设置透明度，然后播放视频
+                                moveVideo.style.opacity = '0.8';
+                                moveVideo.style.setProperty('opacity', '0.8', 'important');
+                                // 延迟一点播放，让过渡更自然
+                                setTimeout(() => {
+                                    moveVideo.play();
+                                }, 100);
+                            }
+                            
                             ttsAudio.src = audioUrl;
                             ttsAudio.play();
+                            
+                            // 监听音频播放结束事件
+                            ttsAudio.onended = function() {
+                                // 音频播放结束后，淡出视频，淡入图片 - 更自然的恢复
+                                if (moveVideo) {
+                                    moveVideo.style.opacity = '0';
+                                    moveVideo.style.setProperty('opacity', '0', 'important');
+                                    // 延迟暂停，让淡出效果更自然
+                                    setTimeout(() => {
+                                        moveVideo.pause();
+                                    }, 800);
+                                }
+                                if (girlImg) {
+                                    // 延迟淡入图片，让过渡更平滑
+                                    setTimeout(() => {
+                                        girlImg.style.opacity = '0.3';
+                                        girlImg.style.setProperty('opacity', '0.3', 'important');
+                                    }, 400);
+                                }
+                            };
+                            
+                            // 监听音频播放错误事件
+                            ttsAudio.onerror = function() {
+                                // 如果播放出错，也要恢复图片显示
+                                if (moveVideo) {
+                                    moveVideo.style.opacity = '0';
+                                    moveVideo.style.setProperty('opacity', '0', 'important');
+                                    setTimeout(() => {
+                                        moveVideo.pause();
+                                    }, 800);
+                                }
+                                if (girlImg) {
+                                    setTimeout(() => {
+                                        girlImg.style.opacity = '0.3';
+                                        girlImg.style.setProperty('opacity', '0.3', 'important');
+                                    }, 400);
+                                }
+                            };
                         } else {
                             console.warn('TTS接口返回错误');
                         }
@@ -2786,10 +2864,17 @@
             feedbackDiv.classList.remove('hide');
             // 让少女图片淡入到100%透明度
             const girlImg = document.getElementById('shaonvGirl');
+            const moveVideo = document.getElementById('moveVideo');
             if (girlImg) {
                 girlImg.style.opacity = '1';
                 // 确保在移动端也生效，覆盖CSS的!important
                 girlImg.style.setProperty('opacity', '1', 'important');
+            }
+            // 确保视频在初始状态下是隐藏的
+            if (moveVideo) {
+                moveVideo.style.opacity = '0';
+                moveVideo.style.setProperty('opacity', '0', 'important');
+                moveVideo.pause();
             }
         }
         
@@ -3001,7 +3086,8 @@
     <!-- <div class="spacebar-hint">Press SPACE to randomize creatures, ocean depth, and activity</div> -->
     <!-- AI反馈居中显示区域 -->
     <div class="ai-center-feedback" id="aiCenterFeedback" style="display:none;"></div>
-    <img id="shaonvGirl" src="shaonv01.png" style="position:fixed; left:50%; top:50%; transform:translate(-50%, -50%); height:100vh; opacity:0.3; pointer-events:none; z-index:10000; transition:opacity 2.5s; display:block;" />
+    <img id="shaonvGirl" src="shaonv01.png" style="position:fixed; left:50%; top:50%; transform:translate(-50%, -50%); height:100vh; opacity:0.3; pointer-events:none; z-index:10000; transition:opacity 0.8s; display:block;" />
+    <video id="moveVideo" src="move.mp4" style="position:fixed; left:50%; top:50%; transform:translate(-50%, -50%); height:100vh; opacity:0; pointer-events:none; z-index:10000; transition:opacity 0.8s; display:block; object-fit:contain;" loop muted></video>
     <!-- Logo -->
     <img id="logo" src="logo.png" style="position:fixed; left:20px; top:20px; z-index:10001; max-width:150px; max-height:75px; opacity:0.8; transition:opacity 0.3s ease;" />
 </body>

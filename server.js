@@ -9,7 +9,7 @@ const app = express();
 
 // 更详细的 CORS 配置
 app.use(cors({
-  origin: ['https://localhost:3001', 'http://localhost:3001', 'http://localhost:8000','https://mmx0318.github.io', 'https://*.vercel.app', 'https://*.netlify.app'],
+  origin: ['http://localhost:3001', 'http://localhost:8000','https://mmx0318.github.io', 'https://*.vercel.app', 'https://*.netlify.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
@@ -98,28 +98,12 @@ app.use(express.static('.'));
 
 const PORT = 3001;
 
-// 检查是否存在SSL证书
-const sslDir = path.join(__dirname, 'ssl');
-const certPath = path.join(sslDir, 'fullchain.pem');
-const keyPath = path.join(sslDir, 'privkey.pem');
-
-if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
-  // 使用HTTPS
-  const options = {
-    key: fs.readFileSync(keyPath),
-    cert: fs.readFileSync(certPath)
-  };
-  
-  https.createServer(options, app).listen(PORT, () => {
-    console.log(`HTTPS 服务器已启动，端口: ${PORT}`);
-    console.log(`访问地址: https://localhost:${PORT}`);
-  });
-} else {
-  // 使用HTTP（开发模式）
-  app.listen(PORT, () => {
-    console.log(`HTTP 服务器已启动，端口: ${PORT}`);
-    console.log(`访问地址: http://localhost:${PORT}`);
-    console.log('提示: 要启用HTTPS，请运行 npm run generate-cert');
-  });
-}
+// 简化启动逻辑 - 默认使用HTTP
+app.listen(PORT, () => {
+  console.log(`HTTP 服务器已启动，端口: ${PORT}`);
+  console.log(`访问地址: http://localhost:${PORT}`);
+  console.log('API端点:');
+  console.log(`  - POST http://localhost:${PORT}/api/kimi`);
+  console.log(`  - POST http://localhost:${PORT}/api/tts`);
+});
 
