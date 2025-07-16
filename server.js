@@ -9,7 +9,7 @@ const app = express();
 
 // 更详细的 CORS 配置
 app.use(cors({
-  origin: ['https://localhost:3001', 'http://localhost:3001', 'http://localhost:8000','https://mmx0318.github.io'],
+  origin: ['https://localhost:3001', 'http://localhost:3001', 'http://localhost:8000','https://mmx0318.github.io', 'https://*.vercel.app', 'https://*.netlify.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
